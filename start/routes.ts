@@ -9,7 +9,7 @@
 
 import router from '@adonisjs/core/services/router'
 import { middleware } from './kernel.js'
-const AuthController = () => import('#controllers/Http/auth_controller')
+const AuthController = () => import('#controllers/auth_controller')
 
 router
   .group(() => {
@@ -17,13 +17,16 @@ router
       .group(() => {
         router.post('/register', [AuthController, 'register']).as('api.auth.register')
         router.post('/login', [AuthController, 'login']).as('api.auth.login')
-        router.get('/logout', [AuthController, 'logout']).as('api.auth.logout')
+        router
+          .delete('/logout', [AuthController, 'logout'])
+          .as('api.auth.logout')
+          .use(middleware.auth())
       })
       .prefix('auth')
 
     router
       .get('/test', async ({ response }) => {
-        console.log('proso sam middleware')
+        return response.json({ message: 'Hello world' })
       })
       // .use(middleware.checkRole([Role.ADMIN]))
       .use(middleware.auth())

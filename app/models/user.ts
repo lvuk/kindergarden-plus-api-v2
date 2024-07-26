@@ -9,6 +9,7 @@ import Child from './child.js'
 import Kindergarden from './kindergarden.js'
 import type { BelongsTo, ManyToMany } from '@adonisjs/lucid/types/relations'
 import Group from './group.js'
+import { DbAccessTokensProvider } from '@adonisjs/auth/access_tokens'
 
 const AuthFinder = withAuthFinder(() => hash.use('scrypt'), {
   uids: ['email', 'PIN'],
@@ -72,6 +73,8 @@ export default class User extends compose(BaseModel, AuthFinder) {
 
   @belongsTo(() => Group)
   public teacherGroup!: BelongsTo<typeof Group>
+
+  static accessTokens = DbAccessTokensProvider.forModel(User)
 }
 
 // notes Notes[]
