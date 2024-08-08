@@ -13,6 +13,7 @@ import { middleware } from './kernel.js'
 import { Role } from '../app/enums/role.js'
 const UsersController = () => import('#controllers/users_controller')
 const KindergardensController = () => import('#controllers/kindergardens_controller')
+const GroupsController = () => import('#controllers/groups_controller')
 const AuthController = () => import('#controllers/auth_controller')
 
 router
@@ -66,6 +67,25 @@ router
           .use(middleware.checkRole([Role.ADMIN]))
       })
       .prefix('kindergardens')
+      .use(middleware.auth())
+
+    router
+      .group(() => {
+        router.get('/', [GroupsController, 'index']).as('api.groups.index') //svi
+        router.get('/:id', [GroupsController, 'show']).as('api.groups.show') //svi
+
+        router
+          .group(() => {
+            router.delete('/:id', [GroupsController, 'destroy']).as('api.groups.destroy') //manager admin
+            router.post('/', [GroupsController, 'store']).as('api.groups.store') //manager admin
+            router
+              .put('/:id', [GroupsController, 'update'])
+              .as('api.groups.update')
+              .use(middleware.checkRole([Role.ADMIN, Role.MANAGER, Role.TEACHER])) //manager admin
+          })
+          .use(middleware.checkRole([Role.ADMIN, Role.MANAGER]))
+      })
+      .prefix('groups')
       .use(middleware.auth())
 
     // router

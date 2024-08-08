@@ -46,9 +46,9 @@ export default class AuthController {
 
     const user = await User.verifyCredentials(email || PIN, password)
 
-    if ((await User.accessTokens.all(user)).length > 0) {
-      return response.status(400).json({ error: 'User already logged in' })
-    }
+    // if ((await User.accessTokens.all(user)).length > 0) {
+    //   return response.status(400).json({ error: 'User already logged in' })
+    // }
 
     if (!user) {
       return response.status(400).json({ error: 'Invalid credentials' })

@@ -21,6 +21,12 @@ export default class User extends compose(BaseModel, AuthFinder) {
   declare id: number
 
   @column()
+  declare kindergardenId: number
+
+  @column()
+  declare groupId: number
+
+  @column()
   declare firstName: string
 
   @column()
