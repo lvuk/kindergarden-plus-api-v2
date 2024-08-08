@@ -1,7 +1,7 @@
 import User from '#models/user'
 import type { HttpContext } from '@adonisjs/core/http'
 import type { NextFn } from '@adonisjs/core/types/http'
-import { Role } from 'App/enums/role.js'
+import { Role } from '../enums/role.js'
 
 export default class CheckRoleMiddleware {
   async handle({ auth, response }: HttpContext, next: NextFn, allowedRoles: Role[]) {
