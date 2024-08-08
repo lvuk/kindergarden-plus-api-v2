@@ -17,6 +17,21 @@ export default class Kindergarden extends BaseModel {
   @column()
   declare address: string
 
+  @column()
+  declare postalCode: string
+
+  @column()
+  declare city: string
+
+  @column()
+  declare country: string
+
+  @column()
+  declare phoneNumber: string
+
+  @column()
+  declare email: string
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 

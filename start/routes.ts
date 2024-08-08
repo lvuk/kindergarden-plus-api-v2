@@ -1,3 +1,4 @@
+import { Kindergarden } from '#models/kindergarden'
 /*
 |--------------------------------------------------------------------------
 | Routes file
@@ -11,6 +12,7 @@ import router from '@adonisjs/core/services/router'
 import { middleware } from './kernel.js'
 import { Role } from '../app/enums/role.js'
 const UsersController = () => import('#controllers/users_controller')
+const KindergardensController = () => import('#controllers/kindergardens_controller')
 const AuthController = () => import('#controllers/auth_controller')
 
 router
@@ -41,6 +43,29 @@ router
           .use(middleware.checkRole([Role.ADMIN, Role.MANAGER]))
       })
       .prefix('users')
+      .use(middleware.auth())
+
+    //kindergardens
+    router
+      .group(() => {
+        router.get('/', [KindergardensController, 'index']).as('api.kindergardens.index')
+        router.get('/:id', [KindergardensController, 'show']).as('api.kindergardens.show')
+
+        router
+          .put('/:id', [KindergardensController, 'update'])
+          .as('api.kindergardens.update')
+          .use(middleware.checkRole([Role.ADMIN, Role.MANAGER]))
+
+        router
+          .group(() => {
+            router.post('/', [KindergardensController, 'store']).as('api.kindergardens.store')
+            router
+              .delete('/:id', [KindergardensController, 'destroy'])
+              .as('api.kindergardens.destroy')
+          })
+          .use(middleware.checkRole([Role.ADMIN]))
+      })
+      .prefix('kindergardens')
       .use(middleware.auth())
 
     // router
