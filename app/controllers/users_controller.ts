@@ -65,18 +65,7 @@ export default class UsersController {
       messages: UpdateUserValidator.messages,
     })
 
-    if (payload.firstName) user.firstName = payload.firstName
-    if (payload.lastName) user.lastName = payload.lastName
-    if (payload.address) user.address = payload.address
-    if (payload.postalCode) user.postalCode = payload.postalCode
-    if (payload.streetName) user.streetName = payload.streetName
-    if (payload.houseNumber) user.houseNumber = payload.houseNumber
-    if (payload.phoneNumber) user.phoneNumber = payload.phoneNumber
-    if (payload.customerId) user.customerId = payload.customerId
-    if (payload.email) user.email = payload.email
-    if (payload.password) user.password = payload.password
-    if (payload.role) user.role = payload.role
-
+    user.merge(payload)
     await user.save()
     return response.status(200).json({ message: 'User successfully updated', user })
   }
