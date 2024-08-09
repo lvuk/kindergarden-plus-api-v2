@@ -35,6 +35,8 @@ export default class Child extends BaseModel {
 
   @manyToMany(() => User, {
     pivotTable: 'parent_children',
+    pivotForeignKey: 'child_id',
+    pivotRelatedForeignKey: 'parent_id',
   })
   public parents!: ManyToMany<typeof User>
 

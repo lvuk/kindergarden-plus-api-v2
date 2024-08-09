@@ -15,6 +15,7 @@ const UsersController = () => import('#controllers/users_controller')
 const KindergardensController = () => import('#controllers/kindergardens_controller')
 const GroupsController = () => import('#controllers/groups_controller')
 const AuthController = () => import('#controllers/auth_controller')
+const ChildrenController = () => import('#controllers/children_controller')
 
 router
   .group(() => {
@@ -88,11 +89,23 @@ router
       .prefix('groups')
       .use(middleware.auth())
 
-    // router
-    //   .get('/test', async ({ response }) => {
-    //     return response.json({ message: 'Hello world' })
-    //   })
-    //   // .use(middleware.checkRole([Role.ADMIN]))
-    //   .use(middleware.auth())
+    router
+      .group(() => {
+        router.get('/', [ChildrenController, 'index']).as('api.children.index')
+        router.get('/:id', [ChildrenController, 'show']).as('api.children.show') //ako je roditelj moze samo svoje dete
+        router
+          .put('/:id', [ChildrenController, 'update'])
+          .as('api.children.update')
+          .use(middleware.checkRole([Role.ADMIN, Role.MANAGER, Role.TEACHER]))
+
+        router
+          .group(() => {
+            router.post('/', [ChildrenController, 'store']).as('api.children.store')
+            router.delete('/:id', [ChildrenController, 'destroy']).as('api.children.destroy')
+          })
+          .use(middleware.checkRole([Role.ADMIN, Role.MANAGER]))
+      })
+      .prefix('children')
+      .use(middleware.auth())
   })
   .prefix('api/v1')
