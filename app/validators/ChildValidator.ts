@@ -1,3 +1,4 @@
+/* eslint-disable unicorn/filename-case */
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 import { schema, rules } from '@adonisjs/validator'
 

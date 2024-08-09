@@ -1,4 +1,3 @@
-import { Kindergarden } from '#models/kindergarden'
 /*
 |--------------------------------------------------------------------------
 | Routes file
