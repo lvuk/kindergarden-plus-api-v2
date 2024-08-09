@@ -28,6 +28,20 @@ export default class ChildValidator {
       .members(schema.number([rules.unsigned(), rules.required()])),
   })
 
+  public static updateSchema = schema.create({
+    groupId: schema.number.optional([rules.unsigned()]),
+    firstName: schema.string.optional({ trim: true }, [rules.maxLength(255), rules.minLength(2)]),
+    lastName: schema.string.optional({ trim: true }, [rules.maxLength(255), rules.minLength(2)]),
+    PIN: schema.string.optional({ trim: true }, [rules.maxLength(11), rules.minLength(11)]),
+    imageUrl: schema.string.optional({ trim: true }, [rules.maxLength(255), rules.minLength(2)]),
+    birthDate: schema.date.optional({
+      format: 'dd-MM-yyyy',
+    }),
+    parents: schema.array
+      .optional([rules.minLength(1), rules.maxLength(2)])
+      .members(schema.number([rules.unsigned(), rules.required()])),
+  })
+
   public static messages = {
     'groupId.required': 'Group ID is required',
     'groupId.unsigned': 'Group ID must be a positive number',

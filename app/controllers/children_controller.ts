@@ -93,8 +93,62 @@ export default class ChildrenController {
   }
 
   //edit child
-  async update({ params, request }: HttpContext) {}
+  async update({ params, request, response, auth }: HttpContext) {
+    const data = await request.validate({
+      schema: ChildValidator.updateSchema,
+      messages: ChildValidator.messages,
+    })
+
+    const child = await Child.query()
+      .where('id', params.id)
+      .preload('group', (groupQuery) => {
+        groupQuery.preload('kindergarden')
+      })
+      .first()
+
+    //Check if child exists
+    if (!child)
+      return response.status(404).json({ error: `Child with ID: ${params.id} does not exists` })
+
+    //check if manager is manager of the child's kindergarden
+    if (
+      auth.user!.role === Role.MANAGER &&
+      child!.group.kindergardenId !== auth.user!.kindergardenId
+    ) {
+      return response.status(400).json({ error: "You are not manager of child's kindergarden" })
+    }
+
+    //check if teacher is teacher of the child
+    if (auth.user!.role === Role.TEACHER && child!.group.id !== auth.user!.groupId) {
+      return response.status(400).json({ error: 'You are not teacher of the child' })
+    }
+
+    await child.merge(data).save()
+
+    return response.status(200).json(child)
+  }
 
   //delete child
-  async destroy({ params }: HttpContext) {}
+  async destroy({ params, response, auth }: HttpContext) {
+    const child = await Child.query()
+      .where('id', params.id)
+      .preload('group', (groupQuery) => {
+        groupQuery.preload('kindergarden')
+      })
+      .first()
+
+    //check if child exists
+    if (!child)
+      return response.status(404).json({ error: `Child with ID: ${params.id} does not exists` })
+
+    if (
+      auth.user!.role === Role.MANAGER &&
+      child.group.kindergardenId !== auth.user!.kindergardenId
+    ) {
+      return response.status(403).json({ error: 'You are not a manager of childs kindergarden' })
+    }
+
+    await child.delete()
+    return response.status(200).json({ message: 'Child successfully deleted' })
+  }
 }
