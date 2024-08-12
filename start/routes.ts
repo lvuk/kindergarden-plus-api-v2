@@ -15,6 +15,7 @@ const KindergardensController = () => import('#controllers/kindergardens_control
 const GroupsController = () => import('#controllers/groups_controller')
 const AuthController = () => import('#controllers/auth_controller')
 const ChildrenController = () => import('#controllers/children_controller')
+const WorkingdaysController = () => import('#controllers/workingdays_controller')
 
 router
   .group(() => {
@@ -105,6 +106,26 @@ router
           .use(middleware.checkRole([Role.ADMIN, Role.MANAGER]))
       })
       .prefix('children')
+      .use(middleware.auth())
+
+    router
+      .group(() => {
+        router.get('/', [WorkingdaysController, 'index']).as('api.workingdays.index')
+        router.get('/:id', [WorkingdaysController, 'show']).as('api.workingdays.show')
+
+        router
+          .group(() => {
+            router.post('/', [WorkingdaysController, 'store']).as('api.workingdays.store')
+            router
+              .put('/:id', [WorkingdaysController, 'update'])
+              .as('api.workingdays.update')
+              .use(middleware.checkRole([Role.ADMIN, Role.MANAGER, Role.TEACHER]))
+
+            router.delete('/:id', [WorkingdaysController, 'destroy']).as('api.workingdays.destroy')
+          })
+          .use(middleware.checkRole([Role.ADMIN, Role.MANAGER]))
+      })
+      .prefix('workingdays')
       .use(middleware.auth())
   })
   .prefix('api/v1')

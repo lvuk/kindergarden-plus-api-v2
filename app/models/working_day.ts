@@ -19,10 +19,10 @@ export default class WorkingDay extends BaseModel {
   declare date: DateTime
 
   @column()
-  declare startTime: DateTime
+  declare startTime: string
 
   @column()
-  declare endTime: DateTime
+  declare endTime: string
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
