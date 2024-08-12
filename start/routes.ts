@@ -1,3 +1,4 @@
+import { NonWorkingDay } from '#models/non_working_day'
 /*
 |--------------------------------------------------------------------------
 | Routes file
@@ -16,6 +17,7 @@ const GroupsController = () => import('#controllers/groups_controller')
 const AuthController = () => import('#controllers/auth_controller')
 const ChildrenController = () => import('#controllers/children_controller')
 const WorkingdaysController = () => import('#controllers/workingdays_controller')
+const NonWorkingDaysController = () => import('#controllers/nonworkingdays_controller')
 
 router
   .group(() => {
@@ -126,6 +128,28 @@ router
           .use(middleware.checkRole([Role.ADMIN, Role.MANAGER]))
       })
       .prefix('workingdays')
+      .use(middleware.auth())
+
+    router
+      .group(() => {
+        router.get('/', [NonWorkingDaysController, 'index']).as('api.nonworkingdays.index')
+        router.get('/:id', [NonWorkingDaysController, 'show']).as('api.nonworkingdays.show')
+
+        router
+          .group(() => {
+            router.post('/', [NonWorkingDaysController, 'store']).as('api.nonworkingdays.store')
+            router
+              .put('/:id', [NonWorkingDaysController, 'update'])
+              .as('api.nonworkingdays.update')
+              .use(middleware.checkRole([Role.ADMIN, Role.MANAGER, Role.TEACHER]))
+
+            router
+              .delete('/:id', [NonWorkingDaysController, 'destroy'])
+              .as('api.nonworkingdays.destroy')
+          })
+          .use(middleware.checkRole([Role.ADMIN, Role.MANAGER]))
+      })
+      .prefix('nonworkingdays')
       .use(middleware.auth())
   })
   .prefix('api/v1')

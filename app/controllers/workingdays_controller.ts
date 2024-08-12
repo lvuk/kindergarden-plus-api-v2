@@ -2,7 +2,6 @@ import Kindergarden from '#models/kindergarden'
 import WorkingDay from '#models/working_day'
 import WorkingDayValidator from '#validators/WorkingDayValidator'
 import type { HttpContext } from '@adonisjs/core/http'
-import { DateTime } from 'luxon'
 
 export default class WorkingdaysController {
   //display all working days

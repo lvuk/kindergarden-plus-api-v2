@@ -8,7 +8,11 @@ export default class NonWorkingDay extends BaseModel {
   @column({ isPrimary: true })
   declare id: number
 
-  @column()
+  @column.dateTime({
+    serialize(value: DateTime | null) {
+      return value ? value.toFormat('dd-MM-yyyy') : ''
+    },
+  })
   declare day: DateTime
 
   @column()
