@@ -31,7 +31,7 @@ export default class NonworkingdaysController {
 
     const workingDayExists = await NonWorkingDay.query()
       .where('kindergardenId', data.kindergardenId)
-      .where('day', data.day.toISODate())
+      .where('day', data.day.toISODate()!.toString())
       .first()
 
     if (workingDayExists)
