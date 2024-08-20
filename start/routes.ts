@@ -18,6 +18,7 @@ const AuthController = () => import('#controllers/auth_controller')
 const ChildrenController = () => import('#controllers/children_controller')
 const WorkingdaysController = () => import('#controllers/workingdays_controller')
 const NonWorkingDaysController = () => import('#controllers/nonworkingdays_controller')
+const EventsController = () => import('#controllers/events_controller')
 
 router
   .group(() => {
@@ -150,6 +151,22 @@ router
           .use(middleware.checkRole([Role.ADMIN, Role.MANAGER]))
       })
       .prefix('nonworkingdays')
+      .use(middleware.auth())
+
+    router
+      .group(() => {
+        router.get('/', [EventsController, 'index']).as('api.events.index') //svi
+        router.get('/:id', [EventsController, 'show']).as('api.events.show') //svi
+
+        router
+          .group(() => {
+            router.post('/', [EventsController, 'store']).as('api.events.store') //manager //admin //teacher
+            router.put('/:id', [EventsController, 'update']).as('api.events.update')
+            router.delete('/:id', [EventsController, 'destroy']).as('api.events.destroy') //admin manager teacher
+          })
+          .use(middleware.checkRole([Role.ADMIN, Role.MANAGER, Role.TEACHER]))
+      })
+      .prefix('events')
       .use(middleware.auth())
   })
   .prefix('api/v1')

@@ -6,6 +6,7 @@ import { BaseModel, belongsTo, column, manyToMany } from '@adonisjs/lucid/orm'
 import { withAuthFinder } from '@adonisjs/auth/mixins/lucid'
 import { Role } from '../enums/role.js'
 import Child from './child.js'
+import Event from './event.js'
 import Kindergarden from './kindergarden.js'
 import type { BelongsTo, ManyToMany } from '@adonisjs/lucid/types/relations'
 import Group from './group.js'
@@ -79,6 +80,11 @@ export default class User extends compose(BaseModel, AuthFinder) {
 
   @belongsTo(() => Group)
   public teacherGroup!: BelongsTo<typeof Group>
+
+  @manyToMany(() => Event, {
+    pivotTable: 'event_attendees',
+  })
+  public events!: ManyToMany<typeof Event>
 
   static accessTokens = DbAccessTokensProvider.forModel(User)
 }
