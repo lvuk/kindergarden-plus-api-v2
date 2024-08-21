@@ -2,13 +2,13 @@
 import { DateTime } from 'luxon'
 import hash from '@adonisjs/core/services/hash'
 import { compose } from '@adonisjs/core/helpers'
-import { BaseModel, belongsTo, column, manyToMany } from '@adonisjs/lucid/orm'
+import { BaseModel, belongsTo, column, hasMany, manyToMany } from '@adonisjs/lucid/orm'
 import { withAuthFinder } from '@adonisjs/auth/mixins/lucid'
 import { Role } from '../enums/role.js'
 import Child from './child.js'
 import Event from './event.js'
 import Kindergarden from './kindergarden.js'
-import type { BelongsTo, ManyToMany } from '@adonisjs/lucid/types/relations'
+import type { BelongsTo, HasMany, ManyToMany } from '@adonisjs/lucid/types/relations'
 import Group from './group.js'
 import { DbAccessTokensProvider } from '@adonisjs/auth/access_tokens'
 
@@ -85,6 +85,9 @@ export default class User extends compose(BaseModel, AuthFinder) {
     pivotTable: 'event_attendees',
   })
   public events!: ManyToMany<typeof Event>
+
+  @hasMany(() => Event)
+  public ownedEvents!: HasMany<typeof Event>
 
   static accessTokens = DbAccessTokensProvider.forModel(User)
 }

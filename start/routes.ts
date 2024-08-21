@@ -19,6 +19,7 @@ const ChildrenController = () => import('#controllers/children_controller')
 const WorkingdaysController = () => import('#controllers/workingdays_controller')
 const NonWorkingDaysController = () => import('#controllers/nonworkingdays_controller')
 const EventsController = () => import('#controllers/events_controller')
+const ResourceController = () => import('#controllers/resources_controller')
 
 router
   .group(() => {
@@ -167,6 +168,22 @@ router
           .use(middleware.checkRole([Role.ADMIN, Role.MANAGER, Role.TEACHER]))
       })
       .prefix('events')
+      .use(middleware.auth())
+
+    router
+      .group(() => {
+        router.get('/', [ResourceController, 'index']).as('api.resources.index')
+        router.get('/:id', [ResourceController, 'show']).as('api.resources.show')
+
+        router
+          .group(() => {
+            router.post('/', [ResourceController, 'store']).as('api.resources.store')
+            router.put('/:id', [ResourceController, 'update']).as('api.resources.update')
+            router.delete('/:id', [ResourceController, 'destroy']).as('api.resources.destroy')
+          })
+          .use(middleware.checkRole([Role.ADMIN]))
+      })
+      .prefix('resources')
       .use(middleware.auth())
   })
   .prefix('api/v1')
