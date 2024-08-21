@@ -100,8 +100,43 @@ export default class EventsController {
   }
 
   //update event
-  async update({ params, request }: HttpContext) {}
+  async update({ params, request, response, auth }: HttpContext) {
+    const data = await request.validate({
+      schema: EventValidator.updateSchema,
+      messages: EventValidator.messages,
+    })
+
+    const event = await Event.query().where('id', params.id).first()
+
+    if (!event)
+      return response.status(404).json({ error: `Event with ID:${params.id} does not exists` })
+
+    if (auth.user!.role === Role.TEACHER && event.authorId !== auth.user!.id)
+      return response.status(403).json({ error: 'You are not the organizator of this event' })
+
+    if (auth.user!.role === Role.MANAGER && event.kindergardenId !== auth.user!.kindergardenId)
+      return response.status(403).json({ error: 'You are not the manager of this kindergarden' })
+
+    await event.merge(data).save()
+    return response.status(200).json({ message: 'Event updated successfully', event })
+  }
 
   //delete event
-  async destroy({ params }: HttpContext) {}
+  async destroy({ params, response, auth }: HttpContext) {
+    const event = await Event.query().where('id', params.id).first()
+
+    if (!event)
+      return response.status(404).json({ error: `Event with ID:${params.id} does not exists` })
+
+    if (auth.user!.role === Role.TEACHER && event.authorId !== auth.user!.id) {
+      return response.status(403).json({ error: 'You are not the organizator of this event' })
+    }
+
+    if (auth.user!.role === Role.MANAGER && event.kindergardenId !== auth.user!.kindergardenId) {
+      return response.status(403).json({ error: 'You are not the manager of this kindergarden' })
+    }
+
+    await event.delete()
+    return response.status(200).json({ message: 'Event successfully deleted' })
+  }
 }
