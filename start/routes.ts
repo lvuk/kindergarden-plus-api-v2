@@ -20,6 +20,7 @@ const WorkingdaysController = () => import('#controllers/workingdays_controller'
 const NonWorkingDaysController = () => import('#controllers/nonworkingdays_controller')
 const EventsController = () => import('#controllers/events_controller')
 const ResourceController = () => import('#controllers/resources_controller')
+const WeeklyPlanController = () => import('#controllers/weekly_plans_controller')
 
 router
   .group(() => {
@@ -184,6 +185,26 @@ router
           .use(middleware.checkRole([Role.ADMIN]))
       })
       .prefix('resources')
+      .use(middleware.auth())
+
+    router
+      .group(() => {
+        router
+          .group(() => {
+            router.get('/', [WeeklyPlanController, 'index']).as('api.weekly_plans.index')
+            router.get('/:id', [WeeklyPlanController, 'show']).as('api.weekly_plans.show')
+          })
+          .use(middleware.checkRole([Role.ADMIN, Role.MANAGER, Role.TEACHER]))
+
+        router
+          .group(() => {
+            router.post('/', [WeeklyPlanController, 'store']).as('api.weekly_plans.store')
+            router.put('/:id', [WeeklyPlanController, 'update']).as('api.weekly_plans.update')
+            router.delete('/:id', [WeeklyPlanController, 'destroy']).as('api.weekly_plans.destroy')
+          })
+          .use(middleware.checkRole([Role.ADMIN, Role.TEACHER]))
+      })
+      .prefix('weekly-plans')
       .use(middleware.auth())
   })
   .prefix('api/v1')

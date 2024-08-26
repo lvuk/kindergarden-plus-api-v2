@@ -11,6 +11,8 @@ import Kindergarden from './kindergarden.js'
 import type { BelongsTo, HasMany, ManyToMany } from '@adonisjs/lucid/types/relations'
 import Group from './group.js'
 import { DbAccessTokensProvider } from '@adonisjs/auth/access_tokens'
+import WeeklyPlan from './pedagogical_documentation/weekly_plan.js'
+import PedagogicalDocumentation from './pedagogical_documentation/pedagogical_document.js'
 
 const AuthFinder = withAuthFinder(() => hash.use('scrypt'), {
   uids: ['email', 'PIN'],
@@ -88,6 +90,16 @@ export default class User extends compose(BaseModel, AuthFinder) {
 
   @hasMany(() => Event)
   public ownedEvents!: HasMany<typeof Event>
+
+  @manyToMany(() => WeeklyPlan, {
+    pivotTable: 'weekly_plan_teachers',
+  })
+  public weeklyPlans!: ManyToMany<typeof WeeklyPlan>
+
+  @manyToMany(() => PedagogicalDocumentation, {
+    pivotTable: 'pedagogical_documentation_teachers',
+  })
+  public pedagogoicalDocuments!: ManyToMany<typeof PedagogicalDocumentation>
 
   static accessTokens = DbAccessTokensProvider.forModel(User)
 }
