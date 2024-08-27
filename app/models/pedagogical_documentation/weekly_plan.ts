@@ -27,8 +27,12 @@ export default class WeeklyPlan extends BaseModel {
   declare updatedAt: DateTime
 
   @belongsTo(() => PedagogicalDocumentation)
-  declare pedagogicalDocumentation: BelongsTo<typeof PedagogicalDocumentation>
+  declare pedagogicalDocument: BelongsTo<typeof PedagogicalDocumentation>
 
-  @manyToMany(() => User)
+  @manyToMany(() => User, {
+    pivotTable: 'weekly_plan_teachers',
+    pivotForeignKey: 'weekly_plan_id',
+    pivotRelatedForeignKey: 'teacher_id',
+  })
   declare teachers: ManyToMany<typeof User>
 }

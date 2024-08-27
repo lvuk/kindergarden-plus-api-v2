@@ -7,6 +7,8 @@ export default class WeeklyPlanValidator {
     titleAndSequence: schema.string.optional([rules.maxLength(255)]),
     tasksForRealization: schema.string.optional([rules.maxLength(255)]),
     forOtherKids: schema.string.optional([rules.maxLength(255)]),
+
+    teachers: schema.array.optional().members(schema.number()),
   })
 
   public static updateSchema = schema.create({
@@ -14,6 +16,8 @@ export default class WeeklyPlanValidator {
     titleAndSequence: schema.string.optional([rules.maxLength(255)]),
     tasksForRealization: schema.string.optional([rules.maxLength(255)]),
     forOtherKids: schema.string.optional([rules.maxLength(255)]),
+
+    teachers: schema.array.optional().members(schema.number()),
   })
 
   public static messages = {
