@@ -1,3 +1,4 @@
+import { PedagogicalDocument } from '#models/pedagogical_documentation/pedagogical_document'
 import { NonWorkingDay } from '#models/non_working_day'
 /*
 |--------------------------------------------------------------------------
@@ -21,6 +22,7 @@ const NonWorkingDaysController = () => import('#controllers/nonworkingdays_contr
 const EventsController = () => import('#controllers/events_controller')
 const ResourceController = () => import('#controllers/resources_controller')
 const WeeklyPlanController = () => import('#controllers/weekly_plans_controller')
+const PedagogicalDocumentsController = () => import('#controllers/pedagogical_documents_controller')
 
 router
   .group(() => {
@@ -205,6 +207,36 @@ router
           .use(middleware.checkRole([Role.ADMIN, Role.TEACHER]))
       })
       .prefix('weekly-plans')
+      .use(middleware.auth())
+
+    router
+      .group(() => {
+        router
+          .group(() => {
+            router
+              .get('/', [PedagogicalDocumentsController, 'index'])
+              .as('api.pedagogical-documents.index')
+            router
+              .get('/:id', [PedagogicalDocumentsController, 'show'])
+              .as('api.pedagogical-documents.show')
+          })
+          .use(middleware.checkRole([Role.ADMIN, Role.MANAGER, Role.TEACHER]))
+
+        router
+          .group(() => {
+            router
+              .post('/', [PedagogicalDocumentsController, 'store'])
+              .as('api.pedagogical-documents.store')
+            router
+              .put('/:id', [PedagogicalDocumentsController, 'update'])
+              .as('api.pedagogical-documents.update')
+            router
+              .delete('/:id', [PedagogicalDocumentsController, 'destroy'])
+              .as('api.pedagogical-documents.destroy')
+          })
+          .use(middleware.checkRole([Role.ADMIN, Role.TEACHER]))
+      })
+      .prefix('pedagogical-documents')
       .use(middleware.auth())
   })
   .prefix('api/v1')

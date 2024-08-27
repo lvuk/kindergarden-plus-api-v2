@@ -1,7 +1,6 @@
 import WeeklyPlan from '#models/pedagogical_documentation/weekly_plan'
 import WeeklyPlanValidator from '#validators/WeeklyPlanValidator'
 import type { HttpContext } from '@adonisjs/core/http'
-import { QueryBuilder } from '@adonisjs/lucid/build/src/Orm/QueryBuilder'
 import { Role } from '../enums/role.js'
 import User from '#models/user'
 import PedagogicalDocument from '#models/pedagogical_documentation/pedagogical_document'
@@ -12,9 +11,7 @@ export default class WeeklyPlansController {
     var weeklyPlans: WeeklyPlan[]
     if (auth.user!.role === 'TEACHER') {
       // Step 1: Fetch all WeeklyPlans and preload teachers
-      weeklyPlans = await WeeklyPlan.query()
-        .preload('teachers') // Preload teachers for each WeeklyPlan
-        .preload('pedagogicalDocumentation') // Optionally preload related documentation
+      weeklyPlans = await WeeklyPlan.query().preload('teachers').preload('pedagogicalDocument') // Preload teachers for each WeeklyPlan
 
       // Step 2: Filter in memory to include only those where the authenticated user is among the teachers
       weeklyPlans = weeklyPlans.filter((weeklyPlan) => {
@@ -23,7 +20,7 @@ export default class WeeklyPlansController {
     } else if (auth.user!.role === 'MANAGER') {
       // Fetch WeeklyPlans associated with the manager's kindergarden
       weeklyPlans = await WeeklyPlan.query().preload(
-        'pedagogicalDocumentation',
+        'pedagogicalDocument',
         (pedagogicalDocumentationQuery) => {
           pedagogicalDocumentationQuery.where('kindergardenId', auth.user!.kindergardenId)
         }
@@ -113,33 +110,38 @@ export default class WeeklyPlansController {
 
     // Find the weekly plan and preload teachers
     const weeklyPlan = await WeeklyPlan.query().where('id', params.id).preload('teachers').first()
-    if (!weeklyPlan) return response.status(404).json({ message: 'Weekly plan not found' })
+
+    if (!weeklyPlan) {
+      return response.status(404).json({ message: 'Weekly plan not found' })
+    }
 
     // Check if the user has permission to update the plan
     if (
       auth.user!.role === Role.TEACHER &&
       !weeklyPlan.teachers.some((teacher) => teacher.id === auth.user!.id)
-    )
+    ) {
       return response.status(403).json({ message: 'Forbidden' })
+    }
 
-    // Update the weekly plan fields if they are provided
-    weeklyPlan.merge({
-      titleAndSequence: data.titleAndSequence,
-      tasksForRealization: data.tasksForRealization,
-      forOtherKids: data.forOtherKids,
-      pedagogicalDocumentId: data.pedagogicalDocumentationId,
-    })
+    // Update only the fields that are present in the request data
+    const updateData = Object.fromEntries(
+      Object.entries(data).filter(([_, value]) => value !== undefined)
+    )
+    Object.assign(weeklyPlan, updateData)
 
     // Check and update the teachers relationship if provided
     if (data.teachers && data.teachers.length > 0) {
-      data.teachers.forEach(async (id) => {
-        const teacher = await User.query().where('id', id).first()
-        if (!teacher)
-          return response.status(400).json({ message: `Teacher with ID ${id} doesn't exists` })
-
-        if (teacher.role !== Role.TEACHER)
-          return response.status(400).json({ message: `User with ID ${id} is not a teacher` })
-      })
+      await Promise.all(
+        data.teachers.map(async (id) => {
+          const teacher = await User.query().where('id', id).first()
+          if (!teacher) {
+            throw new Error(`Teacher with ID ${id} doesn't exist`)
+          }
+          if (teacher.role !== Role.TEACHER) {
+            throw new Error(`User with ID ${id} is not a teacher`)
+          }
+        })
+      )
 
       // Sync teachers (detach existing ones and attach the new ones)
       await weeklyPlan.related('teachers').sync(data.teachers)

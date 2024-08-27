@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 import { DateTime } from 'luxon'
-import { BaseModel, column, hasMany, hasOne } from '@adonisjs/lucid/orm'
+import { BaseModel, column } from '@adonisjs/lucid/orm'
 import User from './user.js'
-import type { HasMany, HasOne } from '@adonisjs/lucid/types/relations'
+import type { HasMany } from '@adonisjs/lucid/types/relations'
 import WorkingDay from './working_day.js'
 import NonWorkingDay from './non_working_day.js'
 import Group from './group.js'
+import PedagogicalDocument from './pedagogical_documentation/pedagogical_document.js'
 
 export default class Kindergarden extends BaseModel {
   @column({ isPrimary: true })
@@ -46,6 +47,9 @@ export default class Kindergarden extends BaseModel {
 
   @hasMany(() => NonWorkingDay)
   public nonWorkingDays!: HasMany<typeof NonWorkingDay>
+
+  @hasMany(() => PedagogicalDocument)
+  declare pedagogicalDocuments: HasMany<typeof PedagogicalDocument>
 
   @hasMany(() => Group)
   public groups!: HasMany<typeof Group>
