@@ -27,9 +27,9 @@ export default class extends BaseSchema {
       table.string('cooperation_experts_parents')
       table.string('joint_activities')
       table.string('observations')
+      table.string('dates')
       table.string('conditions_evaluation')
       table.string('activities_evaluation')
-      table.string('dates')
       table.string('notes')
 
       table.timestamp('created_at')

@@ -1,10 +1,11 @@
 import { DateTime } from 'luxon'
-import { BaseModel, belongsTo, column, hasOne, manyToMany } from '@adonisjs/lucid/orm'
+import { BaseModel, belongsTo, column, hasMany, hasOne, manyToMany } from '@adonisjs/lucid/orm'
 import WeeklyPlan from './weekly_plan.js'
-import type { BelongsTo, HasOne, ManyToMany } from '@adonisjs/lucid/types/relations'
+import type { BelongsTo, HasMany, HasOne, ManyToMany } from '@adonisjs/lucid/types/relations'
 import User from '#models/user'
 import { Quarter } from '../../enums/quarter.js'
 import Kindergarden from '#models/kindergarden'
+import DevelopmentTask from './development_task.js'
 
 export default class PedagogicalDocument extends BaseModel {
   @column({ isPrimary: true })
@@ -63,6 +64,9 @@ export default class PedagogicalDocument extends BaseModel {
 
   @hasOne(() => WeeklyPlan)
   declare weeklyPlan: HasOne<typeof WeeklyPlan>
+
+  @hasMany(() => DevelopmentTask)
+  declare developmentTasks: HasMany<typeof DevelopmentTask>
 
   @manyToMany(() => User, {
     pivotTable: 'pedagogical_documentation_teachers',

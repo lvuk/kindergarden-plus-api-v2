@@ -23,6 +23,7 @@ const EventsController = () => import('#controllers/events_controller')
 const ResourceController = () => import('#controllers/resources_controller')
 const WeeklyPlanController = () => import('#controllers/weekly_plans_controller')
 const PedagogicalDocumentsController = () => import('#controllers/pedagogical_documents_controller')
+const DevelopmentTasksController = () => import('#controllers/development_tasks_controller')
 
 router
   .group(() => {
@@ -237,6 +238,34 @@ router
           .use(middleware.checkRole([Role.ADMIN, Role.TEACHER]))
       })
       .prefix('pedagogical-documents')
+      .use(middleware.auth())
+
+    router
+      .group(() => {
+        router
+          .group(() => {
+            router.get('/', [DevelopmentTasksController, 'index']).as('api.development-tasks.index')
+            router
+              .get('/:id', [DevelopmentTasksController, 'show'])
+              .as('api.development-tasks.show')
+          })
+          .use(middleware.checkRole([Role.ADMIN, Role.MANAGER, Role.TEACHER]))
+
+        router
+          .group(() => {
+            router
+              .post('/', [DevelopmentTasksController, 'store'])
+              .as('api.development-tasks.store')
+            router
+              .put('/:id', [DevelopmentTasksController, 'update'])
+              .as('api.development-tasks.update')
+            router
+              .delete('/:id', [DevelopmentTasksController, 'destroy'])
+              .as('api.development-tasks.destroy')
+          })
+          .use(middleware.checkRole([Role.ADMIN, Role.TEACHER]))
+      })
+      .prefix('development-tasks')
       .use(middleware.auth())
   })
   .prefix('api/v1')
