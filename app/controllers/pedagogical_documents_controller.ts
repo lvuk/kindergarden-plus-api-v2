@@ -72,6 +72,7 @@ export default class PedagogoicalDocumentsController {
       .preload('kindergarden')
       .preload('teachers')
       .preload('weeklyPlan')
+      .preload('developmentTasks')
       .first()
 
     if (!pedagogicalDocument)

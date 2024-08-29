@@ -97,8 +97,51 @@ export default class DevelopmentTasksController {
   }
 
   //update development task
-  async update({ params, request }: HttpContext) {}
+  async update({ params, request, response, auth }: HttpContext) {
+    const data = await request.validate({
+      schema: DevelopmentTaskValidator.updateSchema,
+      messages: DevelopmentTaskValidator.messages,
+    })
+
+    const developmentTask = await DevelopmentTask.query()
+      .where('id', params.id)
+      .preload('pedagogicalDocument')
+      .first()
+
+    if (!developmentTask) return response.status(404).json({ error: 'Development task not found' })
+
+    if (
+      auth.user!.role === Role.TEACHER &&
+      !developmentTask.pedagogicalDocument.teachers.some((teacher) => teacher.id === auth.user!.id)
+    )
+      return response
+        .status(403)
+        .json({ error: 'You are not authorized to update this development task' })
+
+    await developmentTask.merge(data).save()
+
+    return response
+      .status(200)
+      .json({ message: 'Development task updated successfully', developmentTask })
+  }
 
   //delete development task
-  async destroy({ params }: HttpContext) {}
+  async destroy({ params, response, auth }: HttpContext) {
+    const developmentTask = await DevelopmentTask.query()
+      .where('id', params.id)
+      .preload('pedagogicalDocument')
+      .first()
+
+    if (!developmentTask) return response.status(404).json({ error: 'Development task not found' })
+    if (
+      auth.user!.role === Role.TEACHER &&
+      !developmentTask.pedagogicalDocument.teachers.some((teacher) => teacher.id === auth.user!.id)
+    )
+      return response
+        .status(403)
+        .json({ error: 'You are not authorized to delete this development task' })
+
+    await developmentTask.delete()
+    return response.status(200).json({ message: 'Development task deleted successfully' })
+  }
 }
