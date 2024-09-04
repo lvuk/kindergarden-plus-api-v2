@@ -31,7 +31,7 @@ export default class WorkingdaysController {
 
     const workingDayExists = await WorkingDay.query()
       .where('kindergardenId', data.kindergardenId)
-      .where('date', data.date.toISODate())
+      .where('date', data.date.toISODate()!)
       .first()
 
     if (workingDayExists)

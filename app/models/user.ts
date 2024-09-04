@@ -13,6 +13,7 @@ import Group from './group.js'
 import { DbAccessTokensProvider } from '@adonisjs/auth/access_tokens'
 import WeeklyPlan from './pedagogical_documentation/weekly_plan.js'
 import PedagogicalDocumentation from './pedagogical_documentation/pedagogical_document.js'
+import WorkLog from './work_log.js'
 
 const AuthFinder = withAuthFinder(() => hash.use('scrypt'), {
   uids: ['email', 'PIN'],
@@ -100,6 +101,13 @@ export default class User extends compose(BaseModel, AuthFinder) {
     pivotTable: 'pedagogical_documentation_teachers',
   })
   public pedagogoicalDocuments!: ManyToMany<typeof PedagogicalDocumentation>
+
+  @manyToMany(() => WorkLog, {
+    pivotTable: 'work_log_teachers',
+    pivotForeignKey: 'teacher_id',
+    pivotRelatedForeignKey: 'work_log_id',
+  })
+  declare workLogs: ManyToMany<typeof WorkLog>
 
   static accessTokens = DbAccessTokensProvider.forModel(User)
 }

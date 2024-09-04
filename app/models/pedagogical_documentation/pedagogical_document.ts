@@ -6,6 +6,7 @@ import User from '#models/user'
 import { Quarter } from '../../enums/quarter.js'
 import Kindergarden from '#models/kindergarden'
 import DevelopmentTask from './development_task.js'
+import WorkLog from '#models/work_log'
 
 export default class PedagogicalDocument extends BaseModel {
   @column({ isPrimary: true })
@@ -74,4 +75,7 @@ export default class PedagogicalDocument extends BaseModel {
     pivotRelatedForeignKey: 'teacher_id',
   })
   declare teachers: ManyToMany<typeof User>
+
+  @hasMany(() => WorkLog)
+  declare workLogs: HasMany<typeof WorkLog>
 }

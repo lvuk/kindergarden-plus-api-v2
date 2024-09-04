@@ -24,6 +24,7 @@ const ResourceController = () => import('#controllers/resources_controller')
 const WeeklyPlanController = () => import('#controllers/weekly_plans_controller')
 const PedagogicalDocumentsController = () => import('#controllers/pedagogical_documents_controller')
 const DevelopmentTasksController = () => import('#controllers/development_tasks_controller')
+const WorkLogsController = () => import('#controllers/work_logs_controller')
 
 router
   .group(() => {
@@ -266,6 +267,26 @@ router
           .use(middleware.checkRole([Role.ADMIN, Role.TEACHER]))
       })
       .prefix('development-tasks')
+      .use(middleware.auth())
+
+    router
+      .group(() => {
+        router
+          .group(() => {
+            router.get('/', [WorkLogsController, 'index']).as('api.work-logs.index')
+            router.get('/:id', [WorkLogsController, 'show']).as('api.work-logs.show')
+          })
+          .use(middleware.checkRole([Role.ADMIN, Role.MANAGER, Role.TEACHER]))
+
+        router
+          .group(() => {
+            router.post('/', [WorkLogsController, 'store']).as('api.work-logs.store')
+            router.put('/:id', [WorkLogsController, 'update']).as('api.work-logs.update')
+            router.delete('/:id', [WorkLogsController, 'destroy']).as('api.work-logs.destroy')
+          })
+          .use(middleware.checkRole([Role.ADMIN, Role.TEACHER]))
+      })
+      .prefix('work-logs')
       .use(middleware.auth())
   })
   .prefix('api/v1')
