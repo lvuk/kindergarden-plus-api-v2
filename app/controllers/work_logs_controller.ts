@@ -2,12 +2,40 @@ import User from '#models/user'
 import WorkLogValidator from '#validators/WorkLogValidator'
 import type { HttpContext } from '@adonisjs/core/http'
 import { Role } from '../enums/role.js'
-import WorkLog from '#models/work_log'
+import WorkLog from '../models/work_log.js'
 import { DateTime } from 'luxon'
 
 export default class WorkLogsController {
   //display all work logs
-  async index({}: HttpContext) {}
+  async index({ auth, response }: HttpContext) {
+    var workLogs: WorkLog[]
+
+    switch (auth.user!.role) {
+      case Role.MANAGER:
+        workLogs = await WorkLog.query()
+          .preload('pedagogicalDocument')
+          .whereHas(
+            'pedagogicalDocument',
+            (builder: { where: (arg0: string, arg1: number) => void }) => {
+              builder.where('kindergardenId', auth.user!.kindergardenId)
+            }
+          )
+        break
+      case Role.TEACHER:
+        workLogs = await WorkLog.query()
+          .preload('teachers')
+          .whereHas('teachers', (builder: { where: (arg0: string, arg1: number) => void }) => {
+            builder.where('id', auth.user!.id)
+          })
+        break
+      default:
+        workLogs = await WorkLog.query().preload('pedagogicalDocument').preload('teachers')
+    }
+
+    if (!workLogs) return response.status(404).json({ error: 'No relevant work logs found' })
+
+    return response.status(201).json(workLogs)
+  }
 
   //create new work log
   async store({ request, response }: HttpContext) {
@@ -77,26 +105,49 @@ export default class WorkLogsController {
   }
 
   //show individual work log
-  async show({ params, response }: HttpContext) {
+  async show({ params, response, auth }: HttpContext) {
     // Fetch the work log entry along with teachers and pivot data
     const workLog = await WorkLog.query()
       .where('id', params.id)
-      .preload('teachers', (query) => {
-        query.select('*', 'work_log_teachers.start_time', 'work_log_teachers.end_time')
-      })
+      .preload(
+        'teachers',
+        (query: { select: (arg0: string, arg1: string, arg2: string) => void }) => {
+          query.select('*', 'work_log_teachers.start_time', 'work_log_teachers.end_time')
+        }
+      )
       .preload('pedagogicalDocument')
       .firstOrFail()
 
     const responseWorkLog = {
       ...workLog.toJSON(),
-      teachers: workLog.teachers.map((teacher) => ({
-        ...teacher.toJSON(),
-        start_time: teacher.$extras.start_time, // Access pivot data
-        end_time: teacher.$extras.end_time, // Access pivot data
-      })),
+      teachers: workLog.teachers.map(
+        (teacher: { toJSON: () => any; $extras: { start_time: any; end_time: any } }) => ({
+          ...teacher.toJSON(),
+          start_time: teacher.$extras.start_time, // Access pivot data
+          end_time: teacher.$extras.end_time, // Access pivot data
+        })
+      ),
     }
 
-    return responseWorkLog
+    switch (auth.user!.role) {
+      case Role.TEACHER:
+        if (
+          !responseWorkLog.teachers.some((teacher: { id: number }) => teacher.id === auth.user!.id)
+        )
+          return response
+            .status(403)
+            .json({ error: 'You are not authorized to view this work log' })
+        break
+      case Role.MANAGER:
+        if (responseWorkLog.pedagogicalDocument.kindergardenId !== auth.user!.kindergardenId)
+          return response
+            .status(403)
+            .json({ error: 'You are not authorized to view this work log' })
+        break
+    }
+
+    return response.status(200).json(responseWorkLog)
+    // return responseWorkLog
   }
 
   //update work log
@@ -166,5 +217,22 @@ export default class WorkLogsController {
   }
 
   //delete work log
-  async destroy({ params }: HttpContext) {}
+  async destroy({ params, response, auth }: HttpContext) {
+    const workLog = await WorkLog.query()
+      .where('id', params.id)
+      .preload('teachers')
+      .preload('pedagogicalDocument')
+      .first()
+
+    if (!workLog) return response.status(404).json({ error: 'Work log not found' })
+
+    if (
+      auth.user!.role === Role.TEACHER &&
+      !workLog.teachers.some((teacher: { id: number }) => teacher.id === auth.user!.id)
+    )
+      return response.status(403).json({ error: 'You are not authorized to delete this work log' })
+
+    await workLog.delete()
+    return response.status(200).json({ message: 'Work log deleted successfully' })
+  }
 }

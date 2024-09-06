@@ -31,8 +31,8 @@ export default class WorkLogValidator {
     teachers: schema.array.optional().members(
       schema.object().members({
         id: schema.number(),
-        startTime: schema.date.optional({ format: 'HH:mm' }),
-        endTime: schema.date.optional({ format: 'HH:mm' }),
+        startTime: schema.date({ format: 'HH:mm' }),
+        endTime: schema.date({ format: 'HH:mm' }),
       })
     ),
     numberOfChildren: schema.number.optional([rules.unsigned()]),

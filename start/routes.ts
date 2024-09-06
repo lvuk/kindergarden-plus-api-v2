@@ -1,5 +1,3 @@
-import { PedagogicalDocument } from '#models/pedagogical_documentation/pedagogical_document'
-import { NonWorkingDay } from '#models/non_working_day'
 /*
 |--------------------------------------------------------------------------
 | Routes file
@@ -79,6 +77,7 @@ router
       .prefix('kindergardens')
       .use(middleware.auth())
 
+    //groups
     router
       .group(() => {
         router.get('/', [GroupsController, 'index']).as('api.groups.index') //svi
@@ -98,6 +97,7 @@ router
       .prefix('groups')
       .use(middleware.auth())
 
+    //children
     router
       .group(() => {
         router.get('/', [ChildrenController, 'index']).as('api.children.index')
@@ -117,6 +117,7 @@ router
       .prefix('children')
       .use(middleware.auth())
 
+    //working days
     router
       .group(() => {
         router.get('/', [WorkingdaysController, 'index']).as('api.workingdays.index')
@@ -137,6 +138,7 @@ router
       .prefix('workingdays')
       .use(middleware.auth())
 
+    //non working days
     router
       .group(() => {
         router.get('/', [NonWorkingDaysController, 'index']).as('api.nonworkingdays.index')
@@ -159,6 +161,7 @@ router
       .prefix('nonworkingdays')
       .use(middleware.auth())
 
+    //events
     router
       .group(() => {
         router.get('/', [EventsController, 'index']).as('api.events.index') //svi
@@ -175,6 +178,7 @@ router
       .prefix('events')
       .use(middleware.auth())
 
+    //resources
     router
       .group(() => {
         router.get('/', [ResourceController, 'index']).as('api.resources.index')
@@ -191,6 +195,7 @@ router
       .prefix('resources')
       .use(middleware.auth())
 
+    //weekly plans
     router
       .group(() => {
         router
@@ -211,6 +216,7 @@ router
       .prefix('weekly-plans')
       .use(middleware.auth())
 
+    //pedagogical documents
     router
       .group(() => {
         router
@@ -241,6 +247,7 @@ router
       .prefix('pedagogical-documents')
       .use(middleware.auth())
 
+    //development tasks
     router
       .group(() => {
         router
@@ -269,6 +276,7 @@ router
       .prefix('development-tasks')
       .use(middleware.auth())
 
+    //work logs
     router
       .group(() => {
         router
