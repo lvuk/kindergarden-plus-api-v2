@@ -23,6 +23,7 @@ const WeeklyPlanController = () => import('#controllers/weekly_plans_controller'
 const PedagogicalDocumentsController = () => import('#controllers/pedagogical_documents_controller')
 const DevelopmentTasksController = () => import('#controllers/development_tasks_controller')
 const WorkLogsController = () => import('#controllers/work_logs_controller')
+const ParentMeetingsController = () => import('#controllers/parent_meetings_controller')
 
 router
   .group(() => {
@@ -296,5 +297,27 @@ router
       })
       .prefix('work-logs')
       .use(middleware.auth())
+
+    //parent meetings
+    router
+      .group(() => {
+        router.get('/', [ParentMeetingsController, 'index']).as('api.parent-meetings.index')
+        router.get('/:id', [ParentMeetingsController, 'show']).as('api.parent-meetings.show')
+
+        router
+          .group(() => {
+            router.post('/', [ParentMeetingsController, 'store']).as('api.parent-meetings.store')
+            router
+              .put('/:id', [ParentMeetingsController, 'update'])
+              .as('api.parent-meetings.update')
+            router
+              .delete('/:id', [ParentMeetingsController, 'destroy'])
+              .as('api.parent-meetings.destroy')
+          })
+          .use(middleware.checkRole([Role.ADMIN, Role.TEACHER]))
+      })
+      .prefix('parent-meetings')
+      .use(middleware.auth())
+      .use(middleware.checkRole([Role.ADMIN, Role.TEACHER, Role.MANAGER]))
   })
   .prefix('api/v1')
