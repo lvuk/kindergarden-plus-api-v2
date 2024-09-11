@@ -24,6 +24,7 @@ const PedagogicalDocumentsController = () => import('#controllers/pedagogical_do
 const DevelopmentTasksController = () => import('#controllers/development_tasks_controller')
 const WorkLogsController = () => import('#controllers/work_logs_controller')
 const ParentMeetingsController = () => import('#controllers/parent_meetings_controller')
+const AttendanceController = () => import('#controllers/attendances_controller')
 
 router
   .group(() => {
@@ -317,6 +318,23 @@ router
           .use(middleware.checkRole([Role.ADMIN, Role.TEACHER]))
       })
       .prefix('parent-meetings')
+      .use(middleware.auth())
+      .use(middleware.checkRole([Role.ADMIN, Role.TEACHER, Role.MANAGER]))
+
+    router
+      .group(() => {
+        router.get('/', [AttendanceController, 'index']).as('api.attendances.index')
+        router.get('/:id', [AttendanceController, 'show']).as('api.attendances.show')
+
+        router
+          .group(() => {
+            router.post('/', [AttendanceController, 'store']).as('api.attendances.store')
+            router.put('/:id', [AttendanceController, 'update']).as('api.attendances.update')
+            router.delete('/:id', [AttendanceController, 'destroy']).as('api.attendances.destroy')
+          })
+          .use(middleware.checkRole([Role.ADMIN, Role.TEACHER]))
+      })
+      .prefix('attendances')
       .use(middleware.auth())
       .use(middleware.checkRole([Role.ADMIN, Role.TEACHER, Role.MANAGER]))
   })

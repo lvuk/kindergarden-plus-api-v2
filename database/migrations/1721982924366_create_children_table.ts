@@ -11,6 +11,7 @@ export default class extends BaseSchema {
       table.string('last_name').notNullable()
       table.string('pin').notNullable()
       table.string('image_url').notNullable()
+      table.string('health_record').notNullable()
       table.date('birth_date').notNullable()
 
       table.timestamp('created_at')

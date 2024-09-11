@@ -4,6 +4,7 @@ import { BaseModel, belongsTo, column, manyToMany } from '@adonisjs/lucid/orm'
 import User from './user.js'
 import type { BelongsTo, ManyToMany } from '@adonisjs/lucid/types/relations'
 import Group from './group.js'
+import Attendance from './attendance.js'
 
 export default class Child extends BaseModel {
   @column({ isPrimary: true })
@@ -27,6 +28,9 @@ export default class Child extends BaseModel {
   @column.date()
   declare birthDate: DateTime
 
+  @column()
+  declare healthRecord: string
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 
@@ -38,9 +42,17 @@ export default class Child extends BaseModel {
     pivotForeignKey: 'child_id',
     pivotRelatedForeignKey: 'parent_id',
   })
-  public parents!: ManyToMany<typeof User>
+  declare parents: ManyToMany<typeof User>
 
   @belongsTo(() => Group)
-  public group!: BelongsTo<typeof Group>
+  declare group: BelongsTo<typeof Group>
+
+  @manyToMany(() => Attendance, {
+    pivotTable: 'child_attendances',
+    pivotForeignKey: 'child_id',
+    pivotRelatedForeignKey: 'attendance_id',
+    pivotColumns: ['is_present', 'category'],
+  })
+  declare attendances: ManyToMany<typeof Attendance>
 }
 // notes Notes[]

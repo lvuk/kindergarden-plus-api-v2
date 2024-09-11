@@ -14,6 +14,7 @@ import { DbAccessTokensProvider } from '@adonisjs/auth/access_tokens'
 import WeeklyPlan from './pedagogical_documentation/weekly_plan.js'
 import PedagogicalDocumentation from './pedagogical_documentation/pedagogical_document.js'
 import WorkLog from './work_log.js'
+import Attendance from './attendance.js'
 
 const AuthFinder = withAuthFinder(() => hash.use('scrypt'), {
   uids: ['email', 'PIN'],
@@ -109,9 +110,14 @@ export default class User extends compose(BaseModel, AuthFinder) {
   })
   declare workLogs: ManyToMany<typeof WorkLog>
 
+  @manyToMany(() => Attendance, {
+    pivotTable: 'teacher_attendances',
+    pivotForeignKey: 'teacher_id',
+    pivotRelatedForeignKey: 'attendance_id',
+  })
+  declare attendances: ManyToMany<typeof Attendance>
+
   static accessTokens = DbAccessTokensProvider.forModel(User)
 }
 
 // notes Notes[]
-// event Event[]
-// ownedEvents Event[] @relation(name: "EventAuthor")
