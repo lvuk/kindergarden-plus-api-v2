@@ -4,11 +4,67 @@ import type { HttpContext } from '@adonisjs/core/http'
 import { Role } from '../enums/role.js'
 import Child from '#models/child'
 import Attendance from '#models/attendance'
-import { Database } from '@adonisjs/lucid/database'
 
 export default class AttendancesController {
   //displat all attendance
-  async index({}: HttpContext) {}
+  async index({ auth, response }: HttpContext) {
+    let attendances: Attendance[]
+
+    switch (auth.user!.role) {
+      case Role.TEACHER:
+        attendances = await Attendance.query()
+          .preload('teachers', (teachersQuery) => {
+            teachersQuery.select('id', 'first_name', 'last_name')
+          })
+          .preload('children', (childrenQuery) => {
+            childrenQuery.select('id', 'first_name', 'last_name')
+            childrenQuery.pivotColumns(['is_present', 'category']) // Load pivot columns
+          })
+          .whereHas('teachers', (builder) => {
+            builder.where('id', auth.user!.id)
+          })
+        break
+      case Role.MANAGER:
+        attendances = await Attendance.query()
+          .preload('teachers', (teachersQuery) => {
+            teachersQuery.select('id', 'first_name', 'last_name')
+          })
+          .preload('children', (childrenQuery) => {
+            childrenQuery.select('id', 'first_name', 'last_name')
+            childrenQuery.pivotColumns(['is_present', 'category']) // Load pivot columns
+          })
+          .where('kindergardenId', auth.user!.kindergardenId)
+        break
+      default:
+        attendances = await Attendance.query()
+          .preload('teachers')
+          .preload('children', (childrenQuery) => {
+            // childrenQuery.select('id', 'first_name', 'last_name')
+            childrenQuery.pivotColumns(['is_present', 'category']) // Load pivot columns
+          })
+    }
+
+    if (!attendances || attendances.length === 0) {
+      return response.status(404).json({ error: 'No relevant attendance records found' })
+    }
+
+    // Transform the response to include the pivot data in the children
+    const transformedAttendances = attendances.map((attendance) => {
+      return {
+        ...attendance.$attributes,
+        teachers: attendance.teachers,
+        children: attendance.children.map((child) => {
+          return {
+            ...child.$attributes,
+            isPresent: child.$extras.pivot_is_present, // Ensure the key is correct
+            category: child.$extras.pivot_category, // Ensure the key is correct
+          }
+        }),
+      }
+    })
+
+    return response.status(200).json(transformedAttendances)
+  }
 
   //create new attendance
   async store({ request, auth, response }: HttpContext) {
@@ -124,7 +180,51 @@ export default class AttendancesController {
   }
 
   //show individual record
-  async show({ params }: HttpContext) {}
+  async show({ params, auth, response }: HttpContext) {
+    const attendance = await Attendance.query()
+      .where('id', params.id)
+      .preload('teachers', (teachersQuery) => {
+        teachersQuery.select('id', 'first_name', 'last_name')
+      })
+      .preload('children', (childrenQuery) => {
+        childrenQuery.select('id', 'first_name', 'last_name')
+        childrenQuery.pivotColumns(['is_present', 'category']) // Load pivot columns
+      })
+      .first()
+
+    if (!attendance) {
+      return response.status(404).json({ error: 'Attendance record not found' })
+    }
+
+    if (
+      auth.user!.role === Role.TEACHER &&
+      !attendance.teachers.some((teacher) => teacher.id === auth.user!.id)
+    ) {
+      return response.status(403).json({ error: 'You are not authorized to view this attendance' })
+    }
+
+    if (
+      auth.user!.role === Role.MANAGER &&
+      attendance.kindergardenId !== auth.user!.kindergardenId
+    ) {
+      return response.status(403).json({ error: 'You are not authorized to view this attendance' })
+    }
+
+    // Transform the response to include the pivot data in the children
+    const transformedAttendance = {
+      ...attendance.$attributes,
+      teachers: attendance.teachers,
+      children: attendance.children.map((child) => {
+        return {
+          ...child.$attributes,
+          isPresent: child.$extras.pivot_is_present, // Ensure the key is correct
+          category: child.$extras.pivot_category, // Ensure the key is correct
+        }
+      }),
+    }
+
+    return response.status(200).json(transformedAttendance)
+  }
 
   //update record
   async update({ params, request }: HttpContext) {}
