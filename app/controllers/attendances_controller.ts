@@ -227,8 +227,114 @@ export default class AttendancesController {
   }
 
   //update record
-  async update({ params, request }: HttpContext) {}
+  async update({ params, request, response, auth }: HttpContext) {
+    const data = await request.validate({
+      schema: AttendanceValidator.updateSchema,
+      messages: AttendanceValidator.messages,
+    })
+
+    const attendance = await Attendance.query().where('id', params.id).first()
+
+    if (!attendance) {
+      return response.status(404).json({ error: 'Attendance record not found' })
+    }
+
+    if (
+      auth.user!.role === Role.TEACHER &&
+      !attendance.teachers.some((teacher) => teacher.id === auth.user!.id)
+    ) {
+      return response
+        .status(403)
+        .json({ error: 'You are not authorized to update this attendance' })
+    }
+
+    // Update the attendance record
+    attendance.merge({
+      kindergardenId: data.kindergardenId,
+      group: data.group,
+      date: data.date,
+      numberOfChildren: data.numberOfChildren,
+    })
+
+    await attendance.save()
+
+    // Update teachers
+    if (data.teachers) {
+      await attendance.related('teachers').sync(data.teachers)
+      await attendance.load('teachers')
+    }
+
+    // Update children with pivot data
+    if (data.children) {
+      const childrenPivotData: Record<number, { is_present?: boolean; category?: string }> = {}
+
+      // Prepare the pivot data
+      data.children.forEach((child) => {
+        const pivotData: { is_present?: boolean; category?: string } = {}
+
+        // Check if `is_present` exists, then assign
+        if (child.hasOwnProperty('is_present')) {
+          pivotData.is_present = child.is_present
+        }
+
+        // Check if `category` exists, then assign
+        if (child.hasOwnProperty('category')) {
+          pivotData.category = child.category
+        }
+
+        // Assign the pivot data if any valid fields are present
+        if (Object.keys(pivotData).length > 0) {
+          childrenPivotData[child.child_id!] = pivotData
+        }
+      })
+
+      // Sync the children with updated pivot data to the attendance
+      await attendance.related('children').sync(childrenPivotData)
+    }
+
+    await attendance.load('teachers')
+    await attendance.load('children')
+
+    const transformedAttendance = {
+      ...attendance.$attributes,
+      teachers: attendance.teachers,
+      children: attendance.children.map((child) => {
+        return {
+          ...child.$attributes,
+          isPresent: child.$extras.pivot_is_present, // Ensure the key is correct
+          category: child.$extras.pivot_category, // Ensure the key is correct
+        }
+      }),
+    }
+
+    // Return updated attendance record
+    return response
+      .status(200)
+      .json({ message: 'Attendance record updated successfully', transformedAttendance })
+  }
 
   //delete record
-  async destroy({ params }: HttpContext) {}
+  async destroy({ params, auth, response }: HttpContext) {
+    const attendance = await Attendance.query()
+      .where('id', params.id)
+      .preload('children')
+      .preload('children')
+      .first()
+
+    if (!attendance) {
+      return response.status(404).json({ error: 'Attendance record not found' })
+    }
+
+    if (
+      auth.user!.role === Role.TEACHER &&
+      !attendance.teachers.some((teacher) => teacher.id === auth.user!.id)
+    ) {
+      return response
+        .status(403)
+        .json({ error: 'You are not authorized to delete this attendance' })
+    }
+
+    await attendance.delete()
+    return response.status(200).json({ message: 'Attendance record deleted successfully' })
+  }
 }
