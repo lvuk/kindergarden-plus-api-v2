@@ -57,11 +57,15 @@ export default class AuthController {
       expiresIn: '2h',
     })
 
-    response.cookie('auth_token', token, {
-      httpOnly: true, // Prevent access from JavaScript
-      secure: process.env.NODE_ENV === 'production', // Only send over HTTPS in production
-      maxAge: 100 * 60, // 2 hours
-    })
+    response.cookie(
+      'auth_token',
+      { token, role: user!.role },
+      {
+        httpOnly: true, // Prevent access from JavaScript
+        secure: process.env.NODE_ENV === 'production', // Only send over HTTPS in production
+        maxAge: 100 * 60, // 2 hours
+      }
+    )
 
     return response.status(200).json({ message: 'User successfully logged in', user, token })
   }

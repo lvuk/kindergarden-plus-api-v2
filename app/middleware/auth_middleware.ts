@@ -22,11 +22,13 @@ export default class AuthMiddleware {
     const { request, auth } = ctx
 
     // Extract token from cookie
-    const token = request.cookie('auth_token')
+    const user = request.cookie('auth_token')
 
-    if (token) {
+    console.log(user.role)
+
+    if (user.token) {
       // Set the Authorization header with the token
-      request.headers()['authorization'] = `Bearer ${token.token}`
+      request.headers()['authorization'] = `Bearer ${user.token.token}`
     }
 
     // Authenticate using provided guards
