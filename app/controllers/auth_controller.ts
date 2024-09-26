@@ -57,12 +57,23 @@ export default class AuthController {
       expiresIn: '2h',
     })
 
+    response.cookie('auth_token', token, {
+      httpOnly: true, // Prevent access from JavaScript
+      secure: process.env.NODE_ENV === 'production', // Only send over HTTPS in production
+      maxAge: 100 * 60, // 2 hours
+    })
+
     return response.status(200).json({ message: 'User successfully logged in', user, token })
   }
 
   public async logout({ auth, response }: HttpContext) {
     if (auth.user) {
       const token = await User.accessTokens.find(auth.user, auth.user.currentAccessToken.identifier)
+      // Clear the HttpOnly cookie
+      response.clearCookie('auth_token', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production', // Set to true if using HTTPS
+      })
       console.log(token)
       if (token) {
         await User.accessTokens.delete(auth.user, token.identifier)
