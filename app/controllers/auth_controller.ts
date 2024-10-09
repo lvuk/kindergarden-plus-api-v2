@@ -67,10 +67,14 @@ export default class AuthController {
       }
     )
 
+    // const { id, role } = user!
+    // response.cookie('user', { id, role }, { httpOnly: false, maxAge: 100 * 60 })
+
     return response.status(200).json({ message: 'User successfully logged in', user, token })
   }
 
   public async logout({ auth, response }: HttpContext) {
+    console.log('logout krece')
     if (auth.user) {
       const token = await User.accessTokens.find(auth.user, auth.user.currentAccessToken.identifier)
       // Clear the HttpOnly cookie
@@ -78,7 +82,7 @@ export default class AuthController {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production', // Set to true if using HTTPS
       })
-      console.log(token)
+
       if (token) {
         await User.accessTokens.delete(auth.user, token.identifier)
         return response.status(200).json({ message: 'User successfully logged out' })

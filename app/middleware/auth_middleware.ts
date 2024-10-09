@@ -24,7 +24,10 @@ export default class AuthMiddleware {
     // Extract token from cookie
     const user = request.cookie('auth_token')
 
-    console.log(user.role)
+    if (user === undefined) {
+      return ctx.response.status(401).json({ error: 'Unauthorized' })
+    }
+    // console.log(user.role)
 
     if (user.token) {
       // Set the Authorization header with the token
