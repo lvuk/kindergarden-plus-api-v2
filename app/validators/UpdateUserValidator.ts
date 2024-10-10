@@ -2,11 +2,13 @@
 /* eslint-disable unicorn/filename-case */
 import { schema, rules } from '@adonisjs/validator'
 import { Role } from '../enums/role.js'
+import Kindergarden from '#models/kindergarden'
 
 export default class UpdateUserValidator {
   public static schema = schema.create({
     firstName: schema.string.optional({ trim: true }, [rules.maxLength(50), rules.minLength(2)]),
     lastName: schema.string.optional({ trim: true }, [rules.maxLength(50), rules.minLength(2)]),
+    kindergardenId: schema.number.optional(),
     role: schema.enum.optional(Object.values(Role)),
     address: schema.string.optional({ trim: true }, [rules.maxLength(255), rules.minLength(2)]),
     postalCode: schema.string.optional({ trim: true }, [rules.maxLength(10), rules.minLength(2)]),

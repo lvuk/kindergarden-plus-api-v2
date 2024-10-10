@@ -1,5 +1,6 @@
 /* eslint-disable unicorn/no-await-expression-member */
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
+import Kindergarden from '#models/kindergarden'
 import User from '#models/user'
 import RegisterValidator from '#validators/RegisterValidator'
 import { HttpContext } from '@adonisjs/core/http'
@@ -25,6 +26,13 @@ export default class AuthController {
       })
 
       const user = await User.create(data)
+
+      // Check if kindergardenId exists, and associate the user with a kindergarten if provided
+      if (data.kindergardenId) {
+        // Find the kindergarten and relate it to the user
+        const kindergarden = await Kindergarden.findOrFail(data.kindergardenId) // Ensure the kindergarten exists
+        await user.related('kindergarden').associate(kindergarden) // Associate the user with the kindergarten
+      }
 
       // Generate token for the newly registered user
       const token = await User.accessTokens.create(user, ['*'], {

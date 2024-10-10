@@ -1,3 +1,4 @@
+import Kindergarden from '#models/kindergarden'
 import User from '#models/user'
 import RegisterValidator from '#validators/RegisterValidator'
 import UpdateUserValidator from '#validators/UpdateUserValidator'
@@ -64,6 +65,14 @@ export default class UsersController {
       schema: UpdateUserValidator.schema,
       messages: UpdateUserValidator.messages,
     })
+
+    if (payload.kindergardenId) {
+      const kindergarden = await Kindergarden.query().where('id', payload.kindergardenId).first()
+      if (!kindergarden)
+        return response
+          .status(404)
+          .json({ error: `Kindergarden with id: ${payload.kindergardenId} doesn't exists` })
+    }
 
     user.merge(payload)
     await user.save()
