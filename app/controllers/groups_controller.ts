@@ -45,6 +45,7 @@ export default class GroupsController {
     if (!group) return response.status(404).json({ error: 'Group not found' })
 
     await group.load('kindergarden')
+    await group.load('teachers')
 
     return response.status(200).json(group)
   }

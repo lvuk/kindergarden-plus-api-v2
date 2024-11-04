@@ -1,15 +1,20 @@
 import Kindergarden from '#models/kindergarden'
 import User from '#models/user'
+import FilterService from '#services/FilterService'
 import RegisterValidator from '#validators/RegisterValidator'
 import UpdateUserValidator from '#validators/UpdateUserValidator'
 import type { HttpContext } from '@adonisjs/core/http'
 
 export default class UsersController {
   //List all users
-  async index({ request, response }: HttpContext) {
+  async index({ request, response, auth }: HttpContext) {
     const page = request.param('page', 1)
     const limit = 10
-    const users = await User.query().paginate(page, limit)
+    let query = User.query()
+
+    query = FilterService.filterByRole(query, auth.user!)
+
+    const users = await query.paginate(page, limit)
 
     if (users.isEmpty) {
       return response.status(404).json({ error: 'No users to show' })

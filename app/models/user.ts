@@ -83,7 +83,7 @@ export default class User extends compose(BaseModel, AuthFinder) {
   public kindergarden!: BelongsTo<typeof Kindergarden>
 
   @belongsTo(() => Group)
-  public teacherGroup!: BelongsTo<typeof Group>
+  public group!: BelongsTo<typeof Group>
 
   @manyToMany(() => Event, {
     pivotTable: 'event_attendees',

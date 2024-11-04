@@ -19,6 +19,22 @@ export default class extends BaseSchema {
       table.string('email', 254).notNullable().unique()
       table.string('password').notNullable()
 
+      //added after
+      table
+        .integer('kindergarden_id')
+        .nullable()
+        .unsigned()
+        .references('id')
+        .inTable('kindergardens')
+
+      table
+        .integer('group_id')
+        .unsigned()
+        .nullable()
+        .references('id')
+        .inTable('groups')
+        .onDelete('CASCADE')
+
       table.timestamp('created_at').notNullable()
       table.timestamp('updated_at').nullable()
     })

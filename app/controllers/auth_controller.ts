@@ -1,5 +1,6 @@
 /* eslint-disable unicorn/no-await-expression-member */
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
+import Group from '#models/group'
 import Kindergarden from '#models/kindergarden'
 import User from '#models/user'
 import RegisterValidator from '#validators/RegisterValidator'
@@ -32,6 +33,12 @@ export default class AuthController {
         // Find the kindergarten and relate it to the user
         const kindergarden = await Kindergarden.findOrFail(data.kindergardenId) // Ensure the kindergarten exists
         await user.related('kindergarden').associate(kindergarden) // Associate the user with the kindergarten
+      }
+
+      // Check if groupId exists, and associate the user with a group if provided
+      if (data.groupId) {
+        const group = await Group.findOrFail(data.groupId)
+        await user.related('group').associate(group)
       }
 
       // Generate token for the newly registered user
@@ -82,7 +89,6 @@ export default class AuthController {
   }
 
   public async logout({ auth, response }: HttpContext) {
-    console.log('logout krece')
     if (auth.user) {
       const token = await User.accessTokens.find(auth.user, auth.user.currentAccessToken.identifier)
       // Clear the HttpOnly cookie
@@ -95,6 +101,8 @@ export default class AuthController {
         await User.accessTokens.delete(auth.user, token.identifier)
         return response.status(200).json({ message: 'User successfully logged out' })
       }
+    } else {
+      return response.status(400).json({ error: 'You are not logged in' })
     }
   }
 }

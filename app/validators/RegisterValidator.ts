@@ -53,6 +53,7 @@ export default class RegisterValidator {
       rules.maxLength(255),
       rules.minLength(8),
     ]),
+    groupId: schema.number.optional(),
   })
 
   public static messages = {
