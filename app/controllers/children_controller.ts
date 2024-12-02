@@ -168,6 +168,7 @@ export default class ChildrenController {
     }
 
     await parent.load('children')
+
     return response.status(200).json(parent.children)
   }
 }

@@ -76,8 +76,8 @@ export default class User extends compose(BaseModel, AuthFinder) {
 
   @manyToMany(() => Child, {
     pivotTable: 'parent_children',
-    pivotForeignKey: 'child_id',
-    pivotRelatedForeignKey: 'parent_id',
+    pivotForeignKey: 'parent_id',
+    pivotRelatedForeignKey: 'child_id',
   })
   public children!: ManyToMany<typeof Child>
 

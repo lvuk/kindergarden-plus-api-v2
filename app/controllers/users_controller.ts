@@ -58,9 +58,9 @@ export default class UsersController {
 
     if (!user) return response.status(404).json({ error: 'User not found' })
 
-    // if (user.role === Role.PARENT) {
-    //   await user.preload('children')
-    // }
+    if (user.role === Role.PARENT) {
+      await user.preload('children')
+    }
 
     return response.status(200).json(user)
   }
