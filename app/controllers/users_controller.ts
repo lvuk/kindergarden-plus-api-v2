@@ -4,6 +4,7 @@ import FilterService from '#services/FilterService'
 import RegisterValidator from '#validators/RegisterValidator'
 import UpdateUserValidator from '#validators/UpdateUserValidator'
 import type { HttpContext } from '@adonisjs/core/http'
+import { Role } from '../enums/role.js'
 
 export default class UsersController {
   //List all users
@@ -57,6 +58,10 @@ export default class UsersController {
 
     if (!user) return response.status(404).json({ error: 'User not found' })
 
+    if (user.role === Role.PARENT) {
+      await user.preload('children')
+    }
+
     return response.status(200).json(user)
   }
 
@@ -64,7 +69,7 @@ export default class UsersController {
   async update({ response, params, request }: HttpContext) {
     const user = await User.query().where('id', params.id).first()
 
-    if (!user) return response.status(404).json({ error: 'User not found' })
+    if (!user) return response.status(404).json({ errors: [{ message: 'User not found' }] })
 
     const payload = await request.validate({
       schema: UpdateUserValidator.schema,

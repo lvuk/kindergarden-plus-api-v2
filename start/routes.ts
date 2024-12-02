@@ -32,12 +32,19 @@ router
       .group(() => {
         router.post('/register', [AuthController, 'register']).as('api.auth.register')
         router.post('/login', [AuthController, 'login']).as('api.auth.login')
+
         router
           .delete('/logout', [AuthController, 'logout'])
           .as('api.auth.logout')
           .use(middleware.auth())
       })
       .prefix('auth')
+
+    router
+      .get('/test', async ({ response }) => {
+        response.json({ error: 'Test', message: 'This is a test message' })
+      })
+      .as('api.test')
 
     //users
     router

@@ -58,8 +58,14 @@ export default class AuthController {
 
   public async login({ request, auth, response }: HttpContext) {
     const { PIN, email, password } = request.only(['PIN', 'email', 'password'])
+    var user = null
+    try {
+      user = await User.verifyCredentials(email || PIN, password)
+    } catch (error) {
+      return response.status(400).json({ errors: [{ message: error.message }] })
+    }
 
-    const user = await User.verifyCredentials(email || PIN, password)
+    // const user = await User.query().where('PIN', PIN).orWhere('email', email).first()
 
     // if ((await User.accessTokens.all(user)).length > 0) {
     //   return response.status(400).json({ error: 'User already logged in' })
@@ -69,7 +75,7 @@ export default class AuthController {
       return response.status(400).json({ error: 'Invalid credentials' })
     }
     const token = await User.accessTokens.create(user, ['*'], {
-      expiresIn: '2h',
+      expiresIn: '30d',
     })
 
     response.cookie(

@@ -27,7 +27,8 @@ export default class ResourcesController {
 
   //show individual resource
   async show({ params, response }: HttpContext) {
-    const resource = await Resource.query(params.id).first()
+    console.log(params)
+    const resource = await Resource.query().where('id', params.id).first()
 
     if (!resource) return response.status(404).json({ error: 'Resource not found' })
 

@@ -24,14 +24,21 @@ export default class AuthMiddleware {
     // Extract token from cookie
     const user = request.cookie('auth_token')
 
-    if (user === undefined || user === null) {
-      return ctx.response.status(401).json({ error: 'Unauthorized' })
-    }
-    // console.log(user.role)
+    // if (user.token) {
+    //   // Set the Authorization header with the token
+    //   request.headers()['authorization'] = `Bearer ${user.token.token}`
+    // } else {
+    //   return ctx.response.status(401).json({ error: 'Unauthorized' })
+    // }
 
-    if (user.token) {
-      // Set the Authorization header with the token
-      request.headers()['authorization'] = `Bearer ${user.token.token}`
+    if (user === undefined || user === null) {
+      const token = request.header('Authorization')
+      if (!token || token.trim() === 'Bearer') {
+        console.log('Return ovo')
+        return ctx.response.status(401).json({ error: 'Unauthorized' })
+      }
+
+      request.headers()['authorization'] = `${token}`
     }
 
     // Authenticate using provided guards
