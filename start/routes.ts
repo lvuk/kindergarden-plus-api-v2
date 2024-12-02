@@ -126,6 +126,11 @@ router
       .prefix('children')
       .use(middleware.auth())
 
+    router
+      .get('/parents/:parentId/children', [ChildrenController, 'getChildrenFromParent'])
+      .as('api.children.childrenFromParent')
+      .use(middleware.auth())
+
     //working days
     router
       .group(() => {

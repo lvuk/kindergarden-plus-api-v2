@@ -151,4 +151,23 @@ export default class ChildrenController {
     await child.delete()
     return response.status(200).json({ message: 'Child successfully deleted' })
   }
+
+  //get children from parent
+  async getChildrenFromParent({ params, response, auth }: HttpContext) {
+    const parent = await User.find(params.parentId)
+
+    if (!parent)
+      return response
+        .status(404)
+        .json({ errors: [{ message: `Parent with ID: ${params.parentId} does not exists` }] })
+
+    if (auth.user!.role === Role.PARENT && auth.user!.id !== parent.id) {
+      return response
+        .status(403)
+        .json({ errors: [{ message: 'You are not a parent of this child' }] })
+    }
+
+    await parent.load('children')
+    return response.status(200).json(parent.children)
+  }
 }
