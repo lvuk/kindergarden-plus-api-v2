@@ -5,6 +5,7 @@ import Kindergarden from './kindergarden.js'
 import type { BelongsTo, HasMany } from '@adonisjs/lucid/types/relations'
 import Child from './child.js'
 import User from './user.js'
+import Attendance from './attendance.js'
 
 export default class Group extends BaseModel {
   @column({ isPrimary: true })
@@ -30,4 +31,7 @@ export default class Group extends BaseModel {
 
   @hasMany(() => User)
   public teachers!: HasMany<typeof User>
+
+  @hasMany(() => Attendance)
+  public attendances!: HasMany<typeof Attendance>
 }

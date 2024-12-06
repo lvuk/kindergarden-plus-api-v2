@@ -21,8 +21,9 @@ export default class AttendancesController {
             childrenQuery.pivotColumns(['is_present', 'category']) // Load pivot columns
           })
           .whereHas('teachers', (builder) => {
-            builder.where('id', auth.user!.id)
+            builder.where('users.id', auth.user!.id)
           })
+
         break
       case Role.MANAGER:
         attendances = await Attendance.query()
@@ -45,7 +46,9 @@ export default class AttendancesController {
     }
 
     if (!attendances || attendances.length === 0) {
-      return response.status(404).json({ error: 'No relevant attendance records found' })
+      return response.status(404).json({
+        errors: [{ message: 'No relevant attendance records found' }],
+      })
     }
 
     // Transform the response to include the pivot data in the children
@@ -183,6 +186,7 @@ export default class AttendancesController {
   async show({ params, auth, response }: HttpContext) {
     const attendance = await Attendance.query()
       .where('id', params.id)
+      // .preload('group')
       .preload('teachers', (teachersQuery) => {
         teachersQuery.select('id', 'first_name', 'last_name')
       })

@@ -1,8 +1,9 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column, hasMany, manyToMany } from '@adonisjs/lucid/orm'
+import { BaseModel, belongsTo, column, manyToMany } from '@adonisjs/lucid/orm'
 import User from './user.js'
-import type { HasMany, ManyToMany } from '@adonisjs/lucid/types/relations'
+import type { BelongsTo, ManyToMany } from '@adonisjs/lucid/types/relations'
 import Child from './child.js'
+import Group from './group.js'
 
 export default class Attendance extends BaseModel {
   @column({ isPrimary: true })
@@ -10,6 +11,9 @@ export default class Attendance extends BaseModel {
 
   @column()
   declare kindergardenId: number
+
+  @column()
+  declare groupId: number
 
   @column()
   declare group: string
@@ -25,6 +29,9 @@ export default class Attendance extends BaseModel {
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
+
+  // @belongsTo(() => Group)
+  // declare group: BelongsTo<typeof Group>
 
   @manyToMany(() => User, {
     pivotTable: 'teacher_attendances',

@@ -167,8 +167,12 @@ export default class ChildrenController {
         .json({ errors: [{ message: 'You are not a parent of this child' }] })
     }
 
-    await parent.load('children')
+    await parent.load('children', (query) => {
+      query.preload('group') // Preloading the 'group' relationship for children
+      query.preload('parents')
+    })
 
+    console.log(parent.children)
     return response.status(200).json(parent.children)
   }
 }
