@@ -3,9 +3,8 @@ import { rules, schema } from '@adonisjs/validator'
 
 export default class AttendanceValidator {
   static createSchema = schema.create({
-    kindergardenId: schema.number([rules.required()]),
-    group: schema.string([rules.required(), rules.minLength(2), rules.maxLength(255)]),
-    date: schema.date({ format: 'dd-MM-yyyy' }),
+    groupId: schema.number([rules.required()]),
+    date: schema.date({ format: 'dd.MM.yyyy' }),
     teachers: schema.array().members(schema.number()),
     children: schema.array().members(
       schema.object().members({
@@ -33,10 +32,7 @@ export default class AttendanceValidator {
   })
 
   static messages = {
-    'kindergardenId.required': 'Kindergarden ID is required',
-    'group.required': 'Group is required',
-    'group.minLength': 'Group should be at least 2 characters long',
-    'group.maxLength': 'Group should not be greater than 255 characters',
+    'groupId.required': 'Kindergarden ID is required',
     'date.required': 'Date is required',
     'teachers.array': 'Teachers should be an array',
     'teachers.members': 'Teachers should be numbers',

@@ -4,6 +4,7 @@ import type { HttpContext } from '@adonisjs/core/http'
 import { Role } from '../enums/role.js'
 import Child from '#models/child'
 import Attendance from '#models/attendance'
+import { group } from 'console'
 
 export default class AttendancesController {
   //displat all attendance
@@ -19,6 +20,9 @@ export default class AttendancesController {
           .preload('children', (childrenQuery) => {
             childrenQuery.select('id', 'first_name', 'last_name')
             childrenQuery.pivotColumns(['is_present', 'category']) // Load pivot columns
+          })
+          .preload('group', (groupQuery) => {
+            groupQuery.select('id', 'name')
           })
           .whereHas('teachers', (builder) => {
             builder.where('users.id', auth.user!.id)
@@ -55,6 +59,7 @@ export default class AttendancesController {
     const transformedAttendances = attendances.map((attendance) => {
       return {
         ...attendance.$attributes,
+        group: attendance.group,
         teachers: attendance.teachers,
         children: attendance.children.map((child) => {
           return {
@@ -117,8 +122,7 @@ export default class AttendancesController {
 
     // Create the attendance record
     const attendance = await Attendance.create({
-      kindergardenId: data.kindergardenId,
-      group: data.group,
+      groupId: data.groupId,
       date: data.date,
       numberOfChildren: data.numberOfChildren,
     })
@@ -186,7 +190,6 @@ export default class AttendancesController {
   async show({ params, auth, response }: HttpContext) {
     const attendance = await Attendance.query()
       .where('id', params.id)
-      // .preload('group')
       .preload('teachers', (teachersQuery) => {
         teachersQuery.select('id', 'first_name', 'last_name')
       })
@@ -194,7 +197,14 @@ export default class AttendancesController {
         childrenQuery.select('id', 'first_name', 'last_name')
         childrenQuery.pivotColumns(['is_present', 'category']) // Load pivot columns
       })
+      .preload('group', (groupQuery) => {
+        // groupQuery.preload('kindergarden', (kindergardenQuery) => {
+        //   kindergardenQuery.select('id', 'name')
+        // })
+      })
       .first()
+
+    console.log(attendance)
 
     if (!attendance) {
       return response.status(404).json({ error: 'Attendance record not found' })
@@ -207,16 +217,14 @@ export default class AttendancesController {
       return response.status(403).json({ error: 'You are not authorized to view this attendance' })
     }
 
-    if (
-      auth.user!.role === Role.MANAGER &&
-      attendance.kindergardenId !== auth.user!.kindergardenId
-    ) {
+    if (auth.user!.role === Role.MANAGER && attendance.groupId !== auth.user!.groupId) {
       return response.status(403).json({ error: 'You are not authorized to view this attendance' })
     }
 
     // Transform the response to include the pivot data in the children
     const transformedAttendance = {
       ...attendance.$attributes,
+      group: attendance.group,
       teachers: attendance.teachers,
       children: attendance.children.map((child) => {
         return {

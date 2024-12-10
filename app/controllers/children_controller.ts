@@ -21,6 +21,7 @@ export default class ChildrenController {
         groupQuery.preload('kindergarden')
       })
       .preload('parents')
+
     return response.status(200).json(children)
   }
 
@@ -54,6 +55,7 @@ export default class ChildrenController {
       birthDate: data.birthDate,
       groupId: data.groupId,
     })
+
     await child.related('parents').attach(data.parents)
 
     child.load('parents')

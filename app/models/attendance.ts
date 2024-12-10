@@ -10,13 +10,10 @@ export default class Attendance extends BaseModel {
   declare id: number
 
   @column()
-  declare kindergardenId: number
-
-  @column()
   declare groupId: number
 
   @column()
-  declare group: string
+  declare groupName: string
 
   @column.date()
   declare date: DateTime
@@ -30,8 +27,8 @@ export default class Attendance extends BaseModel {
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 
-  // @belongsTo(() => Group)
-  // declare group: BelongsTo<typeof Group>
+  @belongsTo(() => Group)
+  declare group: BelongsTo<typeof Group>
 
   @manyToMany(() => User, {
     pivotTable: 'teacher_attendances',

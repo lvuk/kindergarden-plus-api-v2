@@ -47,6 +47,7 @@ export default class GroupsController {
     await group.load('kindergarden')
     await group.load('teachers')
     await group.load('children')
+    await group.load('attendances')
 
     return response.status(200).json(group)
   }

@@ -22,7 +22,7 @@ export default class ChildValidator {
     ]),
     imageUrl: schema.string.optional({ trim: true }, [rules.maxLength(255), rules.minLength(2)]),
     birthDate: schema.date({
-      format: 'dd-MM-yyyy',
+      format: 'dd.MM.yyyy',
     }),
     parents: schema
       .array([rules.minLength(1), rules.maxLength(2)])
@@ -36,7 +36,7 @@ export default class ChildValidator {
     PIN: schema.string.optional({ trim: true }, [rules.maxLength(11), rules.minLength(11)]),
     imageUrl: schema.string.optional({ trim: true }, [rules.maxLength(255), rules.minLength(2)]),
     birthDate: schema.date.optional({
-      format: 'dd-MM-yyyy',
+      format: 'dd.MM.yyyy',
     }),
     parents: schema.array
       .optional([rules.minLength(1), rules.maxLength(2)])

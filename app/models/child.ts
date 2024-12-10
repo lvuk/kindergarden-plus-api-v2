@@ -25,7 +25,7 @@ export default class Child extends BaseModel {
   @column()
   declare imageUrl: string
 
-  @column.date()
+  @column()
   declare birthDate: DateTime
 
   @column()
