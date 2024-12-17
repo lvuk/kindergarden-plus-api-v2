@@ -14,12 +14,12 @@ export default class AttendancesController {
     switch (auth.user!.role) {
       case Role.TEACHER:
         attendances = await Attendance.query()
-          .preload('teachers', (teachersQuery) => {
-            teachersQuery.select('id', 'first_name', 'last_name')
-          })
           .preload('children', (childrenQuery) => {
             childrenQuery.select('id', 'first_name', 'last_name')
             childrenQuery.pivotColumns(['is_present', 'category']) // Load pivot columns
+          })
+          .preload('teachers', (teachersQuery) => {
+            teachersQuery.select('id', 'first_name', 'last_name')
           })
           .preload('group', (groupQuery) => {
             groupQuery.select('id', 'name')
@@ -44,7 +44,7 @@ export default class AttendancesController {
         attendances = await Attendance.query()
           .preload('teachers')
           .preload('children', (childrenQuery) => {
-            // childrenQuery.select('id', 'first_name', 'last_name')
+            childrenQuery.select('id', 'first_name', 'last_name')
             childrenQuery.pivotColumns(['is_present', 'category']) // Load pivot columns
           })
     }
@@ -54,7 +54,7 @@ export default class AttendancesController {
         errors: [{ message: 'No relevant attendance records found' }],
       })
     }
-
+    console.log(attendances)
     // Transform the response to include the pivot data in the children
     const transformedAttendances = attendances.map((attendance) => {
       return {
@@ -203,8 +203,6 @@ export default class AttendancesController {
         // })
       })
       .first()
-
-    console.log(attendance)
 
     if (!attendance) {
       return response.status(404).json({ error: 'Attendance record not found' })

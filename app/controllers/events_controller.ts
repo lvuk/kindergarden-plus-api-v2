@@ -21,10 +21,32 @@ export default class EventsController {
         events = await Event.query().where('kindergardenId', auth.user!.kindergardenId)
         break
       case Role.PARENT:
-        events = await Event.query().whereHas('attendees', (attendeeQuery) => {
-          attendeeQuery.where('id', auth.user!.id)
-        })
+        // Fetch events with attendees and include pivot columns
+        events = await Event.query()
+          .whereHas('attendees', (attendeeQuery) => {
+            attendeeQuery.where('users.id', auth.user!.id)
+          })
+          .preload('attendees', (attendeeQuery) => {
+            attendeeQuery
+              .where('users.id', auth.user!.id) // Filter only for the authenticated parent
+              .pivotColumns(['invitation_status']) // Include the status from the pivot table
+          })
         break
+    }
+
+    // Transform the response to include the pivot data for PARENT role
+    if (auth.user!.role === Role.PARENT) {
+      const transformedEvents = events.map((event) => {
+        return {
+          ...event.$attributes,
+          attendees: event.attendees.map((attendee) => ({
+            ...attendee.$attributes,
+            invitationStatus: attendee.$extras.pivot_invitation_status, // Ensure this key matches your DB column
+          })),
+        }
+      })
+
+      return response.status(200).json(transformedEvents)
     }
 
     return response.status(200).json(events)
@@ -74,18 +96,21 @@ export default class EventsController {
         break
       case Role.MANAGER:
         event = await Event.query()
+          .preload('attendees')
           .where('id', params.id)
           .where('kindergardenId', auth.user!.kindergardenId)
           .first()
         break
       case Role.TEACHER:
         event = await Event.query()
+          .preload('attendees')
           .where('id', params.id)
           .where('kindergardenId', auth.user!.kindergardenId)
           .first()
         break
       case Role.PARENT:
         event = await Event.query()
+          .preload('attendees')
           .where('id', params.id)
           .whereHas('attendees', (attendeeQuery) => {
             attendeeQuery.where('id', auth.user!.id)
