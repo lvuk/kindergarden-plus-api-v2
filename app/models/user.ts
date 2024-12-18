@@ -15,6 +15,7 @@ import WeeklyPlan from './pedagogical_documentation/weekly_plan.js'
 import PedagogicalDocumentation from './pedagogical_documentation/pedagogical_document.js'
 import WorkLog from './work_log.js'
 import Attendance from './attendance.js'
+import Note from './note.js'
 
 const AuthFinder = withAuthFinder(() => hash.use('scrypt'), {
   uids: ['email', 'PIN'],
@@ -118,6 +119,9 @@ export default class User extends compose(BaseModel, AuthFinder) {
     pivotRelatedForeignKey: 'attendance_id',
   })
   declare attendances: ManyToMany<typeof Attendance>
+
+  @hasMany(() => Note)
+  declare notes: HasMany<typeof Note>
 
   static accessTokens = DbAccessTokensProvider.forModel(User)
 }

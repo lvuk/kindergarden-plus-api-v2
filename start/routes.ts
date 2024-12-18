@@ -10,6 +10,7 @@
 import router from '@adonisjs/core/services/router'
 import { middleware } from './kernel.js'
 import { Role } from '../app/enums/role.js'
+import NotesController from '#controllers/notes_controller'
 const UsersController = () => import('#controllers/users_controller')
 const KindergardensController = () => import('#controllers/kindergardens_controller')
 const GroupsController = () => import('#controllers/groups_controller')
@@ -349,5 +350,16 @@ router
       .prefix('attendances')
       .use(middleware.auth())
       .use(middleware.checkRole([Role.ADMIN, Role.TEACHER, Role.MANAGER]))
+
+    router
+      .group(() => {
+        router.post('/', [NotesController, 'store']).as('api.notes.store')
+        router.get('/', [NotesController, 'index']).as('api.notes.index')
+        router.get('/:id', [NotesController, 'show']).as('api.notes.show')
+        router.put('/:id', [NotesController, 'update']).as('api.notes.update')
+        router.delete('/:id', [NotesController, 'destroy']).as('api.notes.destroy')
+      })
+      .prefix('notes')
+      .use(middleware.auth())
   })
   .prefix('api/v1')
