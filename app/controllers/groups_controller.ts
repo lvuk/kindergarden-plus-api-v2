@@ -45,7 +45,7 @@ export default class GroupsController {
     if (!group) return response.status(404).json({ error: 'Group not found' })
 
     await group.load('kindergarden')
-    await group.load('teachers')
+    await group.load('teachers', (query) => query.where('role', Role.TEACHER))
     await group.load('children')
     await group.load('attendances')
 

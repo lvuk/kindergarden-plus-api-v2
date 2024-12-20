@@ -165,7 +165,10 @@ export default class AttendancesController {
 
       var newChildren: { [x: string]: any }[] = []
       childrenWithPivotData.forEach((child) => {
-        const newChild = { ...child.$attributes, ...child.$extras }
+        const newChild = {
+          ...child.$attributes,
+          ...child.$extras,
+        }
         newChildren.push(newChild)
       })
 

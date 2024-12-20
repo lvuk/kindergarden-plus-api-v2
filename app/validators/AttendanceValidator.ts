@@ -9,7 +9,7 @@ export default class AttendanceValidator {
     children: schema.array().members(
       schema.object().members({
         child_id: schema.number([rules.required()]), // Ensure child_id is required and a number
-        is_present: schema.boolean([rules.required()]), // Ensure is_present is required and boolean
+        isPresent: schema.boolean([rules.required()]), // Ensure is_present is required and boolean
         category: schema.string.optional([rules.minLength(2), rules.maxLength(255)]), // Ensure category is required and within length limits
       })
     ),
