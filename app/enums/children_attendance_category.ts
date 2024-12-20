@@ -3,6 +3,7 @@ export enum ChildrenAttendanceCategory {
   SHORT = 'short',
   LUNCH = 'lunch',
   SICK = 'sick',
-  NOT_PRESENT = 'vacation',
+  NOT_PRESENT = 'not present',
+  ABSENT = 'absent',
   OTHER = 'other',
 }

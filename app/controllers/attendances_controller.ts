@@ -27,6 +27,7 @@ export default class AttendancesController {
           .whereHas('teachers', (builder) => {
             builder.where('users.id', auth.user!.id)
           })
+          .orderBy('date', 'desc')
 
         break
       case Role.MANAGER:
@@ -39,6 +40,7 @@ export default class AttendancesController {
             childrenQuery.pivotColumns(['is_present', 'category']) // Load pivot columns
           })
           .where('kindergardenId', auth.user!.kindergardenId)
+          .orderBy('date', 'desc')
         break
       default:
         attendances = await Attendance.query()
@@ -47,6 +49,7 @@ export default class AttendancesController {
             childrenQuery.select('id', 'first_name', 'last_name')
             childrenQuery.pivotColumns(['is_present', 'category']) // Load pivot columns
           })
+          .orderBy('date', 'desc')
     }
 
     if (!attendances || attendances.length === 0) {
@@ -91,19 +94,23 @@ export default class AttendancesController {
     }
 
     // Ensure the teacher is present if the role is TEACHER
-    if (auth.user!.role === Role.TEACHER && !data.teachers.includes(auth.user!.id)) {
-      data.teachers.push(auth.user!.id)
+    if (auth.user!.role === Role.TEACHER && !data.teachers.includes(auth.user!)) {
+      data.teachers.push(auth.user!)
     }
 
     // Validate the existence of the teachers
     if (data.teachers.length > 0) {
-      for (const id of data.teachers) {
-        const teacher = await User.query().where('id', id).first()
+      for (const teacherData of data.teachers) {
+        const teacher = await User.query().where('id', teacherData.id).first()
         if (!teacher) {
-          return response.status(400).json({ error: `Teacher with ID ${id} doesn't exist` })
+          return response
+            .status(400)
+            .json({ error: `Teacher with ID ${teacherData.id} doesn't exist` })
         }
         if (teacher.role !== Role.TEACHER) {
-          return response.status(400).json({ error: `User with ID ${id} is not a teacher` })
+          return response
+            .status(400)
+            .json({ error: `User with ID ${teacherData.id} is not a teacher` })
         }
       }
     }
@@ -111,11 +118,9 @@ export default class AttendancesController {
     // Validate the existence of children
     if (data.children.length > 0) {
       for (const childData of data.children) {
-        const child = await Child.query().where('id', childData.child_id).first()
+        const child = await Child.query().where('id', childData.id).first()
         if (!child) {
-          return response
-            .status(400)
-            .json({ error: `Child with ID ${childData.child_id} doesn't exist` })
+          return response.status(400).json({ error: `Child with ID ${childData.id} doesn't exist` })
         }
       }
     }
@@ -129,7 +134,8 @@ export default class AttendancesController {
 
     // Attach teachers to the attendance
     if (data.teachers.length > 0) {
-      await attendance.related('teachers').attach(data.teachers)
+      const teacherIds = data.teachers.map((teacher) => teacher.id)
+      await attendance.related('teachers').attach(teacherIds)
       await attendance.load('teachers')
     }
 
@@ -142,8 +148,8 @@ export default class AttendancesController {
 
       // Prepare the pivot data
       data.children.forEach((child) => {
-        childrenPivotData[child.child_id] = {
-          is_present: child.is_present,
+        childrenPivotData[child.id] = {
+          is_present: child.isPresent,
           category: child.category,
         }
       })
@@ -167,18 +173,19 @@ export default class AttendancesController {
       childrenWithPivotData.forEach((child) => {
         const newChild = {
           ...child.$attributes,
-          ...child.$extras,
+          isPresent: child.$extras.is_present, // Ensure the key is correct
+          category: child.$extras.category, // Ensure the key is correct
         }
         newChildren.push(newChild)
       })
 
-      console.log(newChildren)
-
       // Return response with attendance, children with pivot data, and teachers
       return response.status(201).json({
-        ...attendance.$attributes,
-        children: newChildren,
-        teachers: attendance.teachers,
+        attendance: {
+          ...attendance.$attributes,
+          children: newChildren,
+          teachers: attendance.teachers,
+        },
       })
     }
 

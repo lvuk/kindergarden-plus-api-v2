@@ -4,11 +4,17 @@ import { rules, schema } from '@adonisjs/validator'
 export default class AttendanceValidator {
   static createSchema = schema.create({
     groupId: schema.number([rules.required()]),
-    date: schema.date({ format: 'dd.MM.yyyy' }),
-    teachers: schema.array().members(schema.number()),
+    date: schema.date(),
+    teachers: schema.array().members(
+      schema.object().members({
+        id: schema.number([rules.required()]), // Ensure teacher_id is required and a number
+        firstName: schema.string.optional([rules.minLength(2), rules.maxLength(255)]), // Ensure first_name is required and within length limits
+        lastName: schema.string.optional([rules.minLength(2), rules.maxLength(255)]), // Ensure last_name is required and within length limits
+      })
+    ),
     children: schema.array().members(
       schema.object().members({
-        child_id: schema.number([rules.required()]), // Ensure child_id is required and a number
+        id: schema.number([rules.required()]), // Ensure child_id is required and a number
         isPresent: schema.boolean([rules.required()]), // Ensure is_present is required and boolean
         category: schema.string.optional([rules.minLength(2), rules.maxLength(255)]), // Ensure category is required and within length limits
       })
