@@ -4,7 +4,7 @@ import User from '#models/user'
 export default class FilterService {
   static filterOnKindergarden(query: any, kindergartenId: number) {
     if (kindergartenId) {
-      query.where('kindergarten_id', kindergartenId)
+      query.where('kindergarden_id', kindergartenId)
     }
     return query
   }
