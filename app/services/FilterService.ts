@@ -22,7 +22,7 @@ export default class FilterService {
     } else if (user.role === 'ADMIN') {
       // Admins may have access to all records, so no additional filters
     } else if (user.role === 'MANAGER') {
-      query.where('kindergarten_id', user.kindergardenId) // Assume the manager has a kindergartenId associated with them
+      query.where('kindergarden_id', user.kindergardenId) // Assume the manager has a kindergartenId associated with them
     }
     return query
   }

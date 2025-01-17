@@ -216,7 +216,7 @@ export default class AttendancesController {
       messages: AttendanceValidator.messages,
     })
 
-    const attendance = await Attendance.query().where('id', params.id).first()
+    const attendance = await Attendance.query().where('id', params.id).preload('teachers').first()
 
     if (!attendance) {
       return response.status(404).json({ error: 'Attendance record not found' })
@@ -233,8 +233,8 @@ export default class AttendancesController {
 
     // Update the attendance record
     attendance.merge({
-      kindergardenId: data.kindergardenId,
-      group: data.group,
+      // kindergardenId: data.kindergardenId,
+      // group: data.group,
       date: data.date,
       numberOfChildren: data.numberOfChildren,
     })
@@ -291,9 +291,10 @@ export default class AttendancesController {
     }
 
     // Return updated attendance record
-    return response
-      .status(200)
-      .json({ message: 'Attendance record updated successfully', transformedAttendance })
+    return response.status(200).json({
+      message: 'Attendance record updated successfully',
+      attendance: transformedAttendance,
+    })
   }
 
   //delete record
@@ -319,68 +320,5 @@ export default class AttendancesController {
 
     await attendance.delete()
     return response.status(200).json({ message: 'Attendance record deleted successfully' })
-  }
-
-  async showByDate({ request, response, auth }: HttpContext) {
-    let date = request.params().date
-    let attendances: Attendance[]
-
-    switch (auth.user!.role) {
-      case Role.TEACHER:
-        attendances = await Attendance.query()
-          .preload('children', (childrenQuery) => {
-            childrenQuery.select('id', 'first_name', 'last_name')
-            childrenQuery.pivotColumns(['is_present', 'category']) // Load pivot columns
-          })
-          .preload('teachers', (teachersQuery) => {
-            teachersQuery.select('id', 'first_name', 'last_name')
-          })
-          .preload('group', (groupQuery) => {
-            groupQuery.select('id', 'name')
-          })
-          .whereHas('teachers', (builder) => {
-            builder.where('users.id', auth.user!.id)
-          })
-          .where('date', date)
-          .orderBy('date', 'desc')
-
-        break
-      case Role.MANAGER:
-        attendances = await Attendance.query()
-          .preload('teachers', (teachersQuery) => {
-            teachersQuery.select('id', 'first_name', 'last_name')
-          })
-          .preload('children', (childrenQuery) => {
-            childrenQuery.select('id', 'first_name', 'last_name')
-            childrenQuery.pivotColumns(['is_present', 'category']) // Load pivot columns
-          })
-          .where('kindergardenId', auth.user!.kindergardenId)
-          .where('date', date)
-          .orderBy('date', 'desc')
-        break
-      default:
-        attendances = await Attendance.query()
-          .preload('teachers')
-          .preload('children', (childrenQuery) => {
-            childrenQuery.select('id', 'first_name', 'last_name')
-            childrenQuery.pivotColumns(['is_present', 'category']) // Load pivot columns
-          })
-          .where('date', date)
-          .orderBy('date', 'desc')
-    }
-
-    if (!attendances || attendances.length === 0) {
-      return response.status(404).json({
-        errors: [{ message: 'No relevant attendance records found' }],
-      })
-    }
-
-    // Transform the response to include the pivot data in the children
-    const transformedAttendances = attendances.map((attendance) => {
-      return {
-        ...attendance.$attributes,
-        group: attendance.group,
-      }
-    })
   }
 }
