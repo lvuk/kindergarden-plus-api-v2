@@ -23,7 +23,10 @@ export default class NotesController {
       messages: NoteValidator.messages,
     })
 
-    const note = await Note.create(data)
+    const note = await Note.create({
+      ...data,
+      userId: auth.user!.id,
+    })
     // await note.related('user').associate(auth.user!)
 
     return response.status(201).json(note)
@@ -71,7 +74,9 @@ export default class NotesController {
     if (!note) return response.status(404).json({ error: 'Note not found' })
 
     if (note.userId !== auth.user!.id) {
-      return response.status(403).json({ error: 'You are not authorized to delete this note' })
+      return response
+        .status(403)
+        .json({ errors: [{ message: 'No relevant attendance records found' }] })
     }
 
     await note.delete()
