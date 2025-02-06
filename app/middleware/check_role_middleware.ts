@@ -5,11 +5,10 @@ import { Role } from '../enums/role.js'
 
 export default class CheckRoleMiddleware {
   async handle({ auth, response }: HttpContext, next: NextFn, allowedRoles: Role[]) {
-    /**
-     * Middleware logic goes here (before the next call)
-     */
     await auth.use('api').authenticate()
     const user = auth.user as User
+
+    console.log(user)
 
     if (!user) {
       return response.status(400).json({ message: 'You need to login first' })
@@ -19,9 +18,6 @@ export default class CheckRoleMiddleware {
       return response.unauthorized({ error: 'You are not allowed to perform this action' })
     }
 
-    /**
-     * Call next method in the pipeline and return its output
-     */
     await next()
   }
 }

@@ -63,8 +63,12 @@ export default class EventsController {
 
     if (auth.user!.role === Role.TEACHER) {
       attendees = await User.query()
+        .preload('children', (query) => {
+          query.preload('group', (groupQuery) => {
+            groupQuery.where('id', auth.user!.groupId) // Filter the group directly in the preload
+          })
+        })
         .where('role', Role.PARENT)
-        .where('children.group.id', auth.user!.groupId)
     } else {
       attendees = await User.query().where('role', Role.PARENT)
     }
@@ -72,7 +76,7 @@ export default class EventsController {
     const event = await Event.create({
       ...data,
       authorId: auth.user!.id,
-      // kindergardenId: auth.user!.kindergardenId,
+      kindergardenId: auth.user!.kindergardenId,
     })
     const attendeeIds = attendees.map((attendee) => attendee.id)
 
@@ -83,7 +87,22 @@ export default class EventsController {
       }, {})
     )
 
-    return response.status(201).json(event)
+    await event.load('attendees', (query) => {
+      query.pivotColumns(['invitation_status'])
+    })
+
+    console.log(event.attendees[0])
+
+    const transformedEvent = {
+      ...event.$attributes,
+      attendees: event.attendees.map((attendee) => ({
+        firstName: attendee.$attributes.firstName,
+        lastName: attendee.$attributes.lastName,
+        invitationStatus: attendee.$extras.pivot_invitation_status,
+      })),
+    }
+
+    return response.status(201).json(transformedEvent)
   }
 
   //show one event

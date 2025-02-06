@@ -18,11 +18,9 @@ export default class FilterService {
 
   static filterByRole(query: any, user: User) {
     if (user.role === 'TEACHER') {
-      query.where('group_id', user.groupId) // Assume the teacher has a groupId associated with them
-    } else if (user.role === 'ADMIN') {
-      // Admins may have access to all records, so no additional filters
+      query.where('group_id', user.groupId)
     } else if (user.role === 'MANAGER') {
-      query.where('kindergarden_id', user.kindergardenId) // Assume the manager has a kindergartenId associated with them
+      query.where('kindergarden_id', user.kindergardenId)
     }
     return query
   }

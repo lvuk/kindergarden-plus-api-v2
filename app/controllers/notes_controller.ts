@@ -54,10 +54,14 @@ export default class NotesController {
 
     const note = await Note.query().where('id', params.id).first()
 
-    if (!note) return response.status(404).json({ error: 'Note not found' })
+    if (!note) return response.status(404).json({ errors: [{ message: 'Not found' }] })
+
+    console.log(note)
 
     if (note.userId !== auth.user!.id)
-      return response.status(403).json({ error: 'You are not authorized to update this note' })
+      return response
+        .status(403)
+        .json({ errors: [{ message: 'You are not authorized for this action' }] })
 
     note.merge(data)
     await note.save()

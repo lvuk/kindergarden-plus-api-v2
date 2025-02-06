@@ -34,7 +34,7 @@ export default class AuthMiddleware {
     if (user === undefined || user === null) {
       const token = request.header('Authorization')
       if (!token || token.trim() === 'Bearer') {
-        console.log('Return ovo')
+        // console.log('Return ovo')
         return ctx.response.status(401).json({ errors: [{ message: 'Unauthorized' }] })
       }
 

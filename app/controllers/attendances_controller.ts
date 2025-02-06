@@ -5,13 +5,13 @@ import { Role } from '../enums/role.js'
 import Child from '#models/child'
 import Attendance from '#models/attendance'
 import AttendanceService from '#services/AttendanceService'
+import luxon from 'luxon'
 
 export default class AttendancesController {
   //displat all attendance
   async index({ auth, response, request }: HttpContext) {
     const attendances = await AttendanceService.getAttendancesByRoleAndDate(
       auth.user!,
-      auth.user!.role,
       request.qs().date
     )
 
@@ -30,8 +30,8 @@ export default class AttendancesController {
         children: attendance.children.map((child) => {
           return {
             ...child.$attributes,
-            isPresent: child.$extras.pivot_is_present, // Ensure the key is correct
-            category: child.$extras.pivot_category, // Ensure the key is correct
+            isPresent: child.$extras.pivot_is_present,
+            category: child.$extras.pivot_category,
           }
         }),
       }
@@ -51,9 +51,9 @@ export default class AttendancesController {
     // Check if attendance for the specific date already exists
     const isAlreadyExisting = await Attendance.query().where('date', data.date.toISODate()!).first()
     if (isAlreadyExisting) {
-      return response
-        .status(400)
-        .json({ error: `Attendance for ${data.date.toISODate()} already exists` })
+      return response.status(400).json({
+        errors: [{ message: `Attendance for ${data.date.toFormat('dd.MM.yyyy.')} already exists` }],
+      })
     }
 
     // Ensure the teacher is present if the role is TEACHER
@@ -136,8 +136,8 @@ export default class AttendancesController {
       childrenWithPivotData.forEach((child) => {
         const newChild = {
           ...child.$attributes,
-          isPresent: child.$extras.is_present, // Ensure the key is correct
-          category: child.$extras.category, // Ensure the key is correct
+          isPresent: child.$extras.is_present,
+          category: child.$extras.category,
         }
         newChildren.push(newChild)
       })
@@ -168,7 +168,7 @@ export default class AttendancesController {
       })
       .preload('children', (childrenQuery) => {
         childrenQuery.select('id', 'first_name', 'last_name')
-        childrenQuery.pivotColumns(['is_present', 'category']) // Load pivot columns
+        childrenQuery.pivotColumns(['is_present', 'category'])
       })
       .preload('group', (groupQuery) => {
         groupQuery.preload('kindergarden', (kindergardenQuery) => {
@@ -251,21 +251,18 @@ export default class AttendancesController {
     if (data.children) {
       const childrenPivotData: Record<number, { is_present?: boolean; category?: string }> = {}
 
-      // Prepare the pivot data
+      //pivot data
       data.children.forEach((child) => {
         const pivotData: { is_present?: boolean; category?: string } = {}
 
-        // Check if `is_present` exists, then assign
         if (child.hasOwnProperty('is_present')) {
           pivotData.is_present = child.is_present
         }
 
-        // Check if `category` exists, then assign
         if (child.hasOwnProperty('category')) {
           pivotData.category = child.category
         }
 
-        // Assign the pivot data if any valid fields are present
         if (Object.keys(pivotData).length > 0) {
           childrenPivotData[child.child_id!] = pivotData
         }
@@ -284,8 +281,8 @@ export default class AttendancesController {
       children: attendance.children.map((child) => {
         return {
           ...child.$attributes,
-          isPresent: child.$extras.pivot_is_present, // Ensure the key is correct
-          category: child.$extras.pivot_category, // Ensure the key is correct
+          isPresent: child.$extras.pivot_is_present,
+          category: child.$extras.pivot_category,
         }
       }),
     }
@@ -302,7 +299,7 @@ export default class AttendancesController {
     const attendance = await Attendance.query()
       .where('id', params.id)
       .preload('children')
-      .preload('children')
+      .preload('teachers')
       .first()
 
     if (!attendance) {

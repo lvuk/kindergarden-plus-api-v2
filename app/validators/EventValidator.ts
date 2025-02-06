@@ -1,9 +1,9 @@
+/* eslint-disable unicorn/filename-case */
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 import { schema, rules } from '@adonisjs/validator'
 
 export default class EventValidator {
   public static createSchema = schema.create({
-    kindergardenId: schema.number([rules.unsigned(), rules.required()]),
     title: schema.string({ trim: true }, [rules.required(), rules.maxLength(255)]),
     description: schema.string({ trim: true }, [rules.required(), rules.maxLength(255)]),
     startTime: schema.date({
@@ -12,6 +12,7 @@ export default class EventValidator {
     endTime: schema.date({
       format: 'dd-MM-yyyy HH:mm:ss',
     }),
+    attendees: schema.array.optional().members(schema.number([rules.unsigned()])),
   })
 
   public static updateSchema = schema.create({

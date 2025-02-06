@@ -7,16 +7,16 @@ export default class AttendanceValidator {
     date: schema.date(),
     teachers: schema.array().members(
       schema.object().members({
-        id: schema.number([rules.required()]), // Ensure teacher_id is required and a number
-        firstName: schema.string.optional([rules.minLength(2), rules.maxLength(255)]), // Ensure first_name is required and within length limits
-        lastName: schema.string.optional([rules.minLength(2), rules.maxLength(255)]), // Ensure last_name is required and within length limits
+        id: schema.number([rules.required()]),
+        firstName: schema.string.optional([rules.minLength(2), rules.maxLength(255)]),
+        lastName: schema.string.optional([rules.minLength(2), rules.maxLength(255)]),
       })
     ),
     children: schema.array().members(
       schema.object().members({
-        id: schema.number([rules.required()]), // Ensure child_id is required and a number
-        isPresent: schema.boolean([rules.required()]), // Ensure is_present is required and boolean
-        category: schema.string.optional([rules.minLength(2), rules.maxLength(255)]), // Ensure category is required and within length limits
+        id: schema.number([rules.required()]),
+        isPresent: schema.boolean([rules.required()]),
+        category: schema.string.optional([rules.minLength(2), rules.maxLength(255)]),
       })
     ),
     numberOfChildren: schema.number([rules.required()]),

@@ -18,14 +18,14 @@ export default class AttendanceService {
       })
   }
 
-  static async getAttendancesByRoleAndDate(user: User, role: Role, date: string | null) {
+  static async getAttendancesByRoleAndDate(user: User, date: string | null) {
     const query = this.basicQuery()
 
-    if (role === Role.TEACHER) {
+    if (user.role === Role.TEACHER) {
       query.whereHas('teachers', (builder) => {
         builder.where('users.id', user.id)
       })
-    } else if (role === Role.MANAGER) {
+    } else if (user.role === Role.MANAGER) {
       query.where('kindergarden_id', user.kindergardenId)
     }
 
