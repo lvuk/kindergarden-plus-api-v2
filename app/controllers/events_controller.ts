@@ -12,13 +12,17 @@ export default class EventsController {
 
     switch (auth.user!.role) {
       case Role.ADMIN:
-        events = await Event.query()
+        events = await Event.query().preload('attendees')
         break
       case Role.MANAGER:
-        events = await Event.query().where('kindergardenId', auth.user!.kindergardenId)
+        events = await Event.query()
+          .where('kindergardenId', auth.user!.kindergardenId)
+          .preload('attendees')
         break
       case Role.TEACHER:
-        events = await Event.query().where('kindergardenId', auth.user!.kindergardenId)
+        events = await Event.query()
+          .where('kindergardenId', auth.user!.kindergardenId)
+          .preload('attendees')
         break
       case Role.PARENT:
         // Fetch events with attendees and include pivot columns
@@ -34,22 +38,17 @@ export default class EventsController {
         break
     }
 
-    // Transform the response to include the pivot data for PARENT role
-    if (auth.user!.role === Role.PARENT) {
-      const transformedEvents = events.map((event) => {
-        return {
-          ...event.$attributes,
-          attendees: event.attendees.map((attendee) => ({
-            ...attendee.$attributes,
-            invitationStatus: attendee.$extras.pivot_invitation_status, // Ensure this key matches your DB column
-          })),
-        }
-      })
+    const transformedEvents = events.map((event) => {
+      return {
+        ...event.$attributes,
+        attendees: event.attendees.map((attendee) => ({
+          ...attendee.$attributes,
+          invitationStatus: attendee.$extras.pivot_invitation_status, // Ensure this key matches your DB column
+        })),
+      }
+    })
 
-      return response.status(200).json(transformedEvents)
-    }
-
-    return response.status(200).json(events)
+    return response.status(200).json(transformedEvents)
   }
 
   //create new event
@@ -61,24 +60,18 @@ export default class EventsController {
       messages: EventValidator.messages,
     })
 
-    if (auth.user!.role === Role.TEACHER) {
-      attendees = await User.query()
-        .preload('children', (query) => {
-          query.preload('group', (groupQuery) => {
-            groupQuery.where('id', auth.user!.groupId) // Filter the group directly in the preload
-          })
-        })
-        .where('role', Role.PARENT)
-    } else {
-      attendees = await User.query().where('role', Role.PARENT)
-    }
+    if (data.attendees === undefined)
+      return response
+        .status(400)
+        .json({ errors: [{ message: 'Attendees cannot be added while creating an event' }] })
 
     const event = await Event.create({
       ...data,
       authorId: auth.user!.id,
       kindergardenId: auth.user!.kindergardenId,
     })
-    const attendeeIds = attendees.map((attendee) => attendee.id)
+
+    const attendeeIds = data.attendees.map((attendee) => attendee.id)
 
     await event.related('attendees').attach(
       attendeeIds.reduce((acc: { [key: number]: { invitation_status: string } }, id) => {
@@ -96,12 +89,14 @@ export default class EventsController {
     const transformedEvent = {
       ...event.$attributes,
       attendees: event.attendees.map((attendee) => ({
+        id: attendee.$attributes.id,
         firstName: attendee.$attributes.firstName,
         lastName: attendee.$attributes.lastName,
         invitationStatus: attendee.$extras.pivot_invitation_status,
       })),
     }
-
+    console.log(transformedEvent)
+    // return
     return response.status(201).json(transformedEvent)
   }
 

@@ -4,15 +4,23 @@ import { schema, rules } from '@adonisjs/validator'
 
 export default class EventValidator {
   public static createSchema = schema.create({
-    title: schema.string({ trim: true }, [rules.required(), rules.maxLength(255)]),
-    description: schema.string({ trim: true }, [rules.required(), rules.maxLength(255)]),
+    title: schema.string({ trim: true }, [rules.required(), rules.maxLength(1024)]),
+    description: schema.string({ trim: true }, [rules.required(), rules.maxLength(2056)]),
     startTime: schema.date({
-      format: 'dd-MM-yyyy HH:mm:ss',
+      // format: 'dd-MM-yyyy HH:mm:ss',
     }),
     endTime: schema.date({
-      format: 'dd-MM-yyyy HH:mm:ss',
+      // format: 'dd-MM-yyyy HH:mm:ss',
     }),
-    attendees: schema.array.optional().members(schema.number([rules.unsigned()])),
+    attendees: schema.array.optional().members(
+      schema.object().members({
+        id: schema.number([rules.required()]),
+        firstName: schema.string({ trim: true }, [rules.required()]),
+        lastName: schema.string({ trim: true }, [rules.required()]),
+        email: schema.string.optional({}, [rules.email()]),
+        invitationStatus: schema.enum.optional(['pending', 'accepted', 'declined'] as const),
+      })
+    ),
   })
 
   public static updateSchema = schema.create({

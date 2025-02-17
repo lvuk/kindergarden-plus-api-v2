@@ -56,8 +56,6 @@ export default class NotesController {
 
     if (!note) return response.status(404).json({ errors: [{ message: 'Not found' }] })
 
-    console.log(note)
-
     if (note.userId !== auth.user!.id)
       return response
         .status(403)
