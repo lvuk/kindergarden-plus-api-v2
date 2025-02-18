@@ -10,7 +10,6 @@
 import router from '@adonisjs/core/services/router'
 import { middleware } from './kernel.js'
 import { Role } from '../app/enums/role.js'
-import NotesController from '#controllers/notes_controller'
 const UsersController = () => import('#controllers/users_controller')
 const KindergardensController = () => import('#controllers/kindergardens_controller')
 const GroupsController = () => import('#controllers/groups_controller')
@@ -26,6 +25,8 @@ const DevelopmentTasksController = () => import('#controllers/development_tasks_
 const WorkLogsController = () => import('#controllers/work_logs_controller')
 const ParentMeetingsController = () => import('#controllers/parent_meetings_controller')
 const AttendanceController = () => import('#controllers/attendances_controller')
+const NotesController = () => import('#controllers/notes_controller')
+const PhotosController = () => import('#controllers/photos_controller')
 
 router
   .group(() => {
@@ -334,6 +335,7 @@ router
       .use(middleware.auth())
       .use(middleware.checkRole([Role.ADMIN, Role.TEACHER, Role.MANAGER]))
 
+    //Attendance
     router
       .group(() => {
         router.get('/', [AttendanceController, 'index']).as('api.attendances.index')
@@ -351,6 +353,7 @@ router
       .use(middleware.auth())
       .use(middleware.checkRole([Role.ADMIN, Role.TEACHER, Role.MANAGER]))
 
+    //notes
     router
       .group(() => {
         router.post('/', [NotesController, 'store']).as('api.notes.store')
@@ -360,6 +363,23 @@ router
         router.delete('/:id', [NotesController, 'destroy']).as('api.notes.destroy')
       })
       .prefix('notes')
+      .use(middleware.auth())
+
+    //photos
+    router
+      .group(() => {
+        router
+          .group(() => {
+            router.post('/', [PhotosController, 'store']).as('api.photos.store')
+            // router.put('/:id', [PhotosController, 'update']).as('api.photos.update')
+            router.delete('/:id', [PhotosController, 'destroy']).as('api.photos.destroy')
+          })
+          .prefix('photos')
+          .use(middleware.checkRole([Role.TEACHER, Role.ADMIN]))
+
+        router.get('/groups/:groupId/photos', [PhotosController, 'index']).as('api.photos.index')
+        router.get('/photos/:id', [PhotosController, 'show']).as('api.photos.show')
+      })
       .use(middleware.auth())
   })
   .prefix('api/v1')

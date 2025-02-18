@@ -16,6 +16,7 @@ import PedagogicalDocumentation from './pedagogical_documentation/pedagogical_do
 import WorkLog from './work_log.js'
 import Attendance from './attendance.js'
 import Note from './note.js'
+import Photo from './photo.js'
 
 const AuthFinder = withAuthFinder(() => hash.use('scrypt'), {
   uids: ['email', 'PIN'],
@@ -122,6 +123,9 @@ export default class User extends compose(BaseModel, AuthFinder) {
 
   @hasMany(() => Note)
   declare notes: HasMany<typeof Note>
+
+  @hasMany(() => Photo)
+  declare photos: HasMany<typeof Photo>
 
   static accessTokens = DbAccessTokensProvider.forModel(User)
 }
