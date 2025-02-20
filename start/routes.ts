@@ -27,6 +27,7 @@ const ParentMeetingsController = () => import('#controllers/parent_meetings_cont
 const AttendanceController = () => import('#controllers/attendances_controller')
 const NotesController = () => import('#controllers/notes_controller')
 const PhotosController = () => import('#controllers/photos_controller')
+const DailyActivitiesController = () => import('#controllers/daily_activities_controller')
 
 router
   .group(() => {
@@ -363,6 +364,31 @@ router
         router.delete('/:id', [NotesController, 'destroy']).as('api.notes.destroy')
       })
       .prefix('notes')
+      .use(middleware.auth())
+
+    //daily activity
+    router
+      .group(() => {
+        router
+          .group(() => {
+            router.post('/', [DailyActivitiesController, 'store']).as('api.daily-activities.store')
+            router
+              .put('/:id', [DailyActivitiesController, 'update'])
+              .as('api.daily-activities.update')
+            router
+              .delete('/:id', [DailyActivitiesController, 'destroy'])
+              .as('api.daily-activities.destroy')
+          })
+          .use(middleware.checkRole([Role.TEACHER, Role.ADMIN]))
+          .prefix('daily-activities')
+
+        router
+          .get('/groups/:groupId/daily-activities', [DailyActivitiesController, 'index'])
+          .as('api.daily-activities.index')
+        router
+          .get('/daily-activities/:id', [DailyActivitiesController, 'show'])
+          .as('api.daily-activities.show')
+      })
       .use(middleware.auth())
 
     //photos

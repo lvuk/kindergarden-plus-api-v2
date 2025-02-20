@@ -17,6 +17,7 @@ import WorkLog from './work_log.js'
 import Attendance from './attendance.js'
 import Note from './note.js'
 import Photo from './photo.js'
+import DailyActivity from './daily_activity.js'
 
 const AuthFinder = withAuthFinder(() => hash.use('scrypt'), {
   uids: ['email', 'PIN'],
@@ -126,6 +127,9 @@ export default class User extends compose(BaseModel, AuthFinder) {
 
   @hasMany(() => Photo)
   declare photos: HasMany<typeof Photo>
+
+  @hasMany(() => DailyActivity)
+  declare dailyActivities: HasMany<typeof DailyActivity>
 
   static accessTokens = DbAccessTokensProvider.forModel(User)
 }

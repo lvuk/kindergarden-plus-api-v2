@@ -7,8 +7,9 @@ import User from '#models/user'
 export default class DailyActivitiesController {
   //show all daily activities
   async index({ request, response, auth }: HttpContext) {
-    const page = request.param('page', 1)
-    const limit = 10
+    // const page = request.param('page', 1)
+    // const limit = 10
+    var dailyActivities = []
 
     if (auth.user!.role === Role.PARENT) {
       const parent = await User.query()
@@ -20,29 +21,31 @@ export default class DailyActivitiesController {
 
       const groupIds = parent.children.map((child) => child.groupId)
 
-      const dailyActivities = await DailyActivity.query().preload('author').paginate(page, limit)
+      // dailyActivities = await DailyActivity.query().preload('author').paginate(page, limit)
+      dailyActivities = await DailyActivity.query().preload('author')
 
       dailyActivities.filter((dailyActivity) => groupIds.includes(dailyActivity.author.groupId))
     } else if (auth.user!.role === Role.TEACHER) {
-      const dailyActivities = await DailyActivity.query()
+      dailyActivities = await DailyActivity.query()
         .where('author_id', auth.user!.id)
         .preload('author')
-        .paginate(page, limit)
+      // .paginate(page, limit)
     } else {
-      const dailyActivities = await DailyActivity.query().preload('author').paginate(page, limit)
+      // dailyActivities = await DailyActivity.query().preload('author').paginate(page, limit)
+      dailyActivities = await DailyActivity.query().preload('author')
     }
 
     return response.status(200).json(dailyActivities)
   }
 
   //store new daily activity
-  async store({ request, response }: HttpContext) {
+  async store({ request, response, auth }: HttpContext) {
     const data = await request.validate({
       schema: DailyActivityValidator.createSchema,
       messages: DailyActivityValidator.messages,
     })
 
-    const dailyActivity = await DailyActivity.create(data)
+    const dailyActivity = await DailyActivity.create({ ...data, authorId: auth.user!.id })
 
     return response.status(201).json(dailyActivity)
   }
@@ -62,7 +65,7 @@ export default class DailyActivitiesController {
       const groupIds = parent.children.map((child) => child.groupId)
 
       if (!groupIds.includes(dailyActivity.author.groupId)) {
-        return response.status(403).json({ error: 'Forbidden' })
+        return response.status(403).json({ errors: [{ messages: 'Forbidden' }] })
       }
     }
 
