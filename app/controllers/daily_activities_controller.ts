@@ -45,6 +45,17 @@ export default class DailyActivitiesController {
       messages: DailyActivityValidator.messages,
     })
 
+    const existingActivity = await DailyActivity.query()
+      .whereRaw('DATE(date) = ?', [data.date.toISODate()!])
+      .preload('author') // Ensure author relation is loaded
+      .first()
+
+    if (existingActivity && existingActivity.author.groupId === auth.user!.groupId) {
+      return response
+        .status(400)
+        .json({ errors: [{ messages: 'Daily activity already exists for today' }] })
+    }
+
     const dailyActivity = await DailyActivity.create({ ...data, authorId: auth.user!.id })
 
     return response.status(201).json(dailyActivity)
