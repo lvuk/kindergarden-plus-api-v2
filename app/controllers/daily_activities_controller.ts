@@ -53,11 +53,15 @@ export default class DailyActivitiesController {
     if (existingActivity && existingActivity.author.groupId === auth.user!.groupId) {
       return response
         .status(400)
-        .json({ errors: [{ messages: 'Daily activity already exists for today' }] })
+        .json({ errors: [{ message: 'Daily activity already exists for this day' }] })
     }
 
-    const dailyActivity = await DailyActivity.create({ ...data, authorId: auth.user!.id })
+    const dailyActivity = await DailyActivity.create({
+      ...data,
+      authorId: auth.user!.id,
+    })
 
+    console.log(dailyActivity)
     return response.status(201).json(dailyActivity)
   }
 
