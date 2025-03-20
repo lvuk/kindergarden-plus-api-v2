@@ -10,7 +10,7 @@ export default class DailyActivity extends BaseModel {
   @column()
   declare authorId: number
 
-  @column.dateTime()
+  @column()
   declare date: DateTime
 
   @column()

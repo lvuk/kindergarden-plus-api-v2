@@ -35,6 +35,8 @@ export default class DailyActivitiesController {
       dailyActivities = await DailyActivity.query().preload('author')
     }
 
+    console.log(dailyActivities)
+
     return response.status(200).json(dailyActivities)
   }
 
@@ -47,7 +49,7 @@ export default class DailyActivitiesController {
 
     const existingActivity = await DailyActivity.query()
       .whereRaw('DATE(date) = ?', [data.date.toISODate()!])
-      .preload('author') // Ensure author relation is loaded
+      .preload('author')
       .first()
 
     if (existingActivity && existingActivity.author.groupId === auth.user!.groupId) {
