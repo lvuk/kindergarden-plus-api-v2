@@ -211,6 +211,7 @@ export default class AttendancesController {
 
   //update record
   async update({ params, request, response, auth }: HttpContext) {
+    console.log('Received data:', request.all())
     const data = await request.validate({
       schema: AttendanceValidator.updateSchema,
       messages: AttendanceValidator.messages,
@@ -264,7 +265,7 @@ export default class AttendancesController {
         }
 
         if (Object.keys(pivotData).length > 0) {
-          childrenPivotData[child.child_id!] = pivotData
+          childrenPivotData[child.id!] = pivotData
         }
       })
 

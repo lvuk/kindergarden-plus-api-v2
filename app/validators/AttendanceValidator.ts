@@ -26,10 +26,10 @@ export default class AttendanceValidator {
     kindergardenId: schema.number.optional(),
     group: schema.string.optional(),
     date: schema.date.optional(),
-    teachers: schema.array.optional().members(schema.number()),
+    teachers: schema.array.optional().members(schema.number.optional()),
     children: schema.array.optional().members(
       schema.object().members({
-        child_id: schema.number.optional(),
+        id: schema.number.optional(),
         is_present: schema.boolean.optional(),
         category: schema.string.optional(),
       })
