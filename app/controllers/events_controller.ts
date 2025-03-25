@@ -127,14 +127,15 @@ export default class EventsController {
           .preload('attendees')
           .where('id', params.id)
           .whereHas('attendees', (attendeeQuery) => {
-            attendeeQuery.where('id', auth.user!.id)
+            attendeeQuery.where('users.id', auth.user!.id)
           })
           .first()
         break
     }
 
     if (!event) return response.status(404).json({ error: `Event not found` })
-    await event.load('attendees')
+    console.log('EVENT', event.$preloaded.attendees)
+    // await event.load('attendees')
     return response.status(200).json(event)
   }
 
