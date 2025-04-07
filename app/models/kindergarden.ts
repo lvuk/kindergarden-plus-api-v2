@@ -7,6 +7,7 @@ import WorkingDay from './working_day.js'
 import NonWorkingDay from './non_working_day.js'
 import Group from './group.js'
 import PedagogicalDocument from './pedagogical_documentation/pedagogical_document.js'
+import Payment from './payment.js'
 
 export default class Kindergarden extends BaseModel {
   @column({ isPrimary: true })
@@ -53,6 +54,9 @@ export default class Kindergarden extends BaseModel {
 
   @hasMany(() => Group)
   public groups!: HasMany<typeof Group>
+
+  @hasMany(() => Payment)
+  public payments!: HasMany<typeof Payment>
 }
 
 // event Event[]

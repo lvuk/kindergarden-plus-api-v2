@@ -124,7 +124,9 @@ export default class EventsController {
         break
       case Role.PARENT:
         event = await Event.query()
-          .preload('attendees')
+          .preload('attendees', (attendeeQuery) => {
+            attendeeQuery.pivotColumns(['invitation_status'])
+          })
           .where('id', params.id)
           .whereHas('attendees', (attendeeQuery) => {
             attendeeQuery.where('users.id', auth.user!.id)
@@ -134,9 +136,15 @@ export default class EventsController {
     }
 
     if (!event) return response.status(404).json({ error: `Event not found` })
-    console.log('EVENT', event.$preloaded.attendees)
-    // await event.load('attendees')
-    return response.status(200).json(event)
+    console.log(event.attendees)
+    const transformedEvent = {
+      ...event.$attributes,
+      attendees: event.attendees.map((attendee) => ({
+        ...attendee.$attributes,
+        invitationStatus: attendee.$extras.pivot_invitation_status,
+      })),
+    }
+    return response.status(200).json(transformedEvent)
   }
 
   //update event

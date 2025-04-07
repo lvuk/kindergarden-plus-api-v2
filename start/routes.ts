@@ -28,6 +28,7 @@ const AttendanceController = () => import('#controllers/attendances_controller')
 const NotesController = () => import('#controllers/notes_controller')
 const PhotosController = () => import('#controllers/photos_controller')
 const DailyActivitiesController = () => import('#controllers/daily_activities_controller')
+const PaymentsController = () => import('#controllers/payments_controller')
 
 router
   .group(() => {
@@ -407,5 +408,25 @@ router
         router.get('/photos/:id', [PhotosController, 'show']).as('api.photos.show')
       })
       .use(middleware.auth())
+
+    //payments
+    router
+      .group(() => {
+        router
+          .post('/', [PaymentsController, 'store'])
+          .as('api.payments.store')
+          .use(middleware.checkRole([Role.PARENT]))
+
+        router
+          .group(() => {
+            router.get('/', [PaymentsController, 'index']).as('api.payments.index')
+            router.get('/:id', [PaymentsController, 'show']).as('api.payments.show')
+            router.put('/:id', [PaymentsController, 'update']).as('api.payments.update')
+            router.delete('/:id', [PaymentsController, 'destroy']).as('api.payments.destroy')
+          })
+          .use(middleware.checkRole([Role.ADMIN, Role.MANAGER, Role.PARENT]))
+      })
+      .use(middleware.auth())
+      .prefix('payments')
   })
   .prefix('api/v1')
