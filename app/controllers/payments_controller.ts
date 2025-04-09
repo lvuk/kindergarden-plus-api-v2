@@ -2,6 +2,7 @@ import Payment from '#models/payment'
 import type { HttpContext } from '@adonisjs/core/http'
 import { Role } from '../enums/role.js'
 import PaymentValidator from '#validators/PaymentsValidator'
+import { DateTime } from 'luxon'
 
 export default class PaymentsController {
   async index({ auth, response }: HttpContext) {
@@ -74,7 +75,76 @@ export default class PaymentsController {
     return response.status(200).json(payment)
   }
 
-  async update({ params, request }: HttpContext) {}
+  async update({ params, request, response }: HttpContext) {
+    const data = await request.validate({
+      schema: PaymentValidator.updateSchema,
+      messages: PaymentValidator.messages,
+    })
+
+    if (!data) return response.status(400).json({ errors: [{ message: 'Invalid data' }] })
+
+    const payment = await Payment.findOrFail(params.id)
+
+    payment.merge({
+      amount: data.amount,
+      paymentDate: data.paymentDate,
+      monthPaidFor: data.monthPaidFor,
+      isPaid: data.isPaid,
+      description: data.description,
+    })
+
+    await payment.save()
+
+    return response.status(200).json(payment)
+  }
 
   async destroy({ params }: HttpContext) {}
+
+  async pay({ params, auth, response }: HttpContext) {
+    const payment = await Payment.findOrFail(params.id)
+
+    if (payment.userId !== auth.user!.id) {
+      return response.unauthorized({ errors: [{ message: 'Unauthorized' }] })
+    }
+
+    if (payment.isPaid) {
+      return response.badRequest({ errors: [{ message: 'Already paid' }] })
+    }
+
+    // 1. Mark current payment as paid
+    payment.isPaid = true
+    payment.paymentDate = DateTime.now().toJSDate()
+    await payment.save()
+
+    // 2. Check if all earlier payments are paid
+    const unpaidOlder = await Payment.query()
+      .where('user_id', auth.user!.id)
+      .andWhere('is_paid', false)
+      .andWhere('month_paid_for', '<', DateTime.fromJSDate(payment.monthPaidFor))
+
+    if (unpaidOlder.length === 0) {
+      // 3. No older unpaid payments — create the next one
+      const currentMonth = DateTime.fromJSDate(payment.monthPaidFor)
+      const nextMonth = currentMonth.plus({ months: 1 })
+
+      const existing = await Payment.query()
+        .where('user_id', auth.user!.id)
+        .andWhere('month_paid_for', nextMonth.toISODate()!) // still works
+        .first()
+
+      if (!existing) {
+        await Payment.create({
+          kindergardenId: auth.user!.kindergardenId,
+          userId: auth.user!.id,
+          amount: payment.amount,
+          paymentDate: null, // unpaid, so no date yet
+          monthPaidFor: nextMonth,
+          isPaid: false,
+          description: `Payment for ${nextMonth.toFormat('MM/yyyy')}`,
+        })
+      }
+    }
+
+    return response.status(200).json({ message: 'Payment successful' })
+  }
 }

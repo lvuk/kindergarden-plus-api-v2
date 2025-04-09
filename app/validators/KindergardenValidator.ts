@@ -34,6 +34,7 @@ export default class KindergardenValidator {
       rules.minLength(6),
     ]),
     email: schema.string({ trim: true }, [rules.required(), rules.email()]),
+    paymentAmount: schema.number([rules.required()]),
   })
 
   public static updateSchema = schema.create({

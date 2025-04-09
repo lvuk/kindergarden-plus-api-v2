@@ -31,6 +31,11 @@ export default class Kindergarden extends BaseModel {
   @column()
   declare phoneNumber: string
 
+  @column({
+    serialize: (value: any) => Number(value),
+  })
+  declare paymentAmount: number
+
   @column()
   declare email: string
 

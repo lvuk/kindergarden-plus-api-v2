@@ -21,7 +21,7 @@ export default class Payment extends BaseModel {
   declare amount: number
 
   @column()
-  declare paymentDate: DateTime
+  declare paymentDate: DateTime | null
 
   @column()
   declare monthPaidFor: DateTime

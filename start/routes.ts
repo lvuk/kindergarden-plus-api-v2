@@ -421,7 +421,7 @@ router
           .group(() => {
             router.get('/', [PaymentsController, 'index']).as('api.payments.index')
             router.get('/:id', [PaymentsController, 'show']).as('api.payments.show')
-            router.put('/:id', [PaymentsController, 'update']).as('api.payments.update')
+            router.put('/:id/pay', [PaymentsController, 'pay']).as('api.payments.pay')
             router.delete('/:id', [PaymentsController, 'destroy']).as('api.payments.destroy')
           })
           .use(middleware.checkRole([Role.ADMIN, Role.MANAGER, Role.PARENT]))

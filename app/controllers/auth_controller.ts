@@ -5,6 +5,9 @@ import Kindergarden from '#models/kindergarden'
 import User from '#models/user'
 import RegisterValidator from '#validators/RegisterValidator'
 import { HttpContext } from '@adonisjs/core/http'
+import PaymentsController from './payments_controller.js'
+import { DateTime } from 'luxon'
+import Payment from '#models/payment'
 
 export default class AuthController {
   public async register({ request, auth, response }: HttpContext) {
@@ -39,6 +42,31 @@ export default class AuthController {
       if (data.groupId) {
         const group = await Group.findOrFail(data.groupId)
         await user.related('group').associate(group)
+      }
+
+      await user.load('kindergarden')
+
+      if (user.kindergarden) {
+        const today = DateTime.now()
+        const nextMonth = today.plus({ months: 1 }).startOf('month')
+
+        // Prevent creating duplicate payment if it somehow already exists
+        const existingPayment = await Payment.query()
+          .where('user_id', user.id)
+          .andWhere('month_paid_for', nextMonth.toISODate())
+          .first()
+
+        if (!existingPayment) {
+          await Payment.create({
+            kindergardenId: user.kindergarden.id,
+            userId: user.id,
+            amount: user.kindergarden.paymentAmount,
+            paymentDate: null,
+            monthPaidFor: nextMonth,
+            isPaid: false,
+            description: `Payment for ${nextMonth.toFormat('MM/yyyy')}`,
+          })
+        }
       }
 
       // Generate token for the newly registered user
