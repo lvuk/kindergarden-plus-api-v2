@@ -5,7 +5,6 @@ import Kindergarden from '#models/kindergarden'
 import User from '#models/user'
 import RegisterValidator from '#validators/RegisterValidator'
 import { HttpContext } from '@adonisjs/core/http'
-import PaymentsController from './payments_controller.js'
 import { DateTime } from 'luxon'
 import Payment from '#models/payment'
 

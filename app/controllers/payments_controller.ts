@@ -5,29 +5,28 @@ import PaymentValidator from '#validators/PaymentsValidator'
 import { DateTime } from 'luxon'
 
 export default class PaymentsController {
-  async index({ auth, response }: HttpContext) {
-    var payments: Payment[]
+  async index({ auth, response, request }: HttpContext) {
+    const date = request.input('date')
+
+    const paymentsQuery = Payment.query().preload('payee').preload('kindergarden')
 
     switch (auth.user!.role) {
       case Role.ADMIN:
-        payments = await Payment.query().preload('payee').preload('kindergarden')
         break
       case Role.MANAGER:
-        payments = await Payment.query()
-          .where('kindergardenId', auth.user!.kindergardenId)
-          .preload('payee')
-          .preload('kindergarden')
-          .orderBy('paymentDate', 'desc')
+        paymentsQuery.where('kindergardenId', auth.user!.kindergardenId)
         break
       case Role.PARENT:
-        payments = await Payment.query().where('userId', auth.user!.id).preload('payee')
+        paymentsQuery.where('userId', auth.user!.id)
         break
-      default:
-        payments = await Payment.query()
-          .where('kindergardenId', auth.user!.kindergardenId)
-          .preload('payee')
-          .preload('kindergarden')
     }
+
+    if (date) {
+      const parsedDate = DateTime.fromFormat(date, 'yyyy-MM')
+      paymentsQuery.where('monthPaidFor', parsedDate.toFormat('yyyy-MM-dd'))
+    }
+
+    const payments = await paymentsQuery.orderBy('month_paid_for', 'desc')
 
     return response.status(200).json(payments)
   }

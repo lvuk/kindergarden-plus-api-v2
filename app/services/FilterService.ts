@@ -21,6 +21,8 @@ export default class FilterService {
       query.where('group_id', user.groupId)
     } else if (user.role === 'MANAGER') {
       query.where('kindergarden_id', user.kindergardenId)
+    } else if (user.role === 'PARENT') {
+      query.where('group_id', user.kindergardenId)
     }
     return query
   }
