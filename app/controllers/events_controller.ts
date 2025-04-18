@@ -53,8 +53,6 @@ export default class EventsController {
 
   //create new event
   async store({ request, response, auth }: HttpContext) {
-    var attendees: User[]
-
     const data = await request.validate({
       schema: EventValidator.createSchema,
       messages: EventValidator.messages,
@@ -73,9 +71,18 @@ export default class EventsController {
 
     const attendeeIds = data.attendees.map((attendee) => attendee.id)
 
+    if (!attendeeIds.includes(auth.user!.id)) {
+      attendeeIds.push(auth.user!.id)
+    }
+
     await event.related('attendees').attach(
       attendeeIds.reduce((acc: { [key: number]: { invitation_status: string } }, id) => {
-        acc[id] = { invitation_status: InvitationStatus.PENDING }
+        console.log(id)
+        console.log(auth.user!.id)
+        acc[id] = {
+          invitation_status:
+            id === auth.user!.id ? InvitationStatus.ACCEPTED : InvitationStatus.PENDING,
+        }
         return acc
       }, {})
     )
@@ -110,14 +117,18 @@ export default class EventsController {
         break
       case Role.MANAGER:
         event = await Event.query()
-          .preload('attendees')
+          .preload('attendees', (attendeeQuery) => {
+            attendeeQuery.pivotColumns(['invitation_status'])
+          })
           .where('id', params.id)
           .where('kindergardenId', auth.user!.kindergardenId)
           .first()
         break
       case Role.TEACHER:
         event = await Event.query()
-          .preload('attendees')
+          .preload('attendees', (attendeeQuery) => {
+            attendeeQuery.pivotColumns(['invitation_status'])
+          })
           .where('id', params.id)
           .where('kindergardenId', auth.user!.kindergardenId)
           .first()
@@ -136,7 +147,7 @@ export default class EventsController {
     }
 
     if (!event) return response.status(404).json({ error: `Event not found` })
-    console.log(event.attendees)
+
     const transformedEvent = {
       ...event.$attributes,
       attendees: event.attendees.map((attendee) => ({
@@ -144,6 +155,7 @@ export default class EventsController {
         invitationStatus: attendee.$extras.pivot_invitation_status,
       })),
     }
+
     return response.status(200).json(transformedEvent)
   }
 
