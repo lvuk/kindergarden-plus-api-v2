@@ -35,11 +35,20 @@ export default class EventValidator {
     title: schema.string.optional({ trim: true }, [rules.maxLength(255)]),
     description: schema.string.optional({ trim: true }, [rules.maxLength(255)]),
     startTime: schema.date.optional({
-      format: 'dd-MM-yyyy HH:mm:ss',
+      // format: 'dd-MM-yyyy HH:mm:ss',
     }),
     endTime: schema.date.optional({
-      format: 'dd-MM-yyyy HH:mm:ss',
+      // format: 'dd-MM-yyyy HH:mm:ss',
     }),
+    attendees: schema.array.optional().members(
+      schema.object().members({
+        id: schema.number([rules.required()]),
+        firstName: schema.string({ trim: true }, [rules.required()]),
+        lastName: schema.string({ trim: true }, [rules.required()]),
+        email: schema.string.optional({}, [rules.email()]),
+        invitationStatus: schema.enum.optional(['pending', 'accepted', 'declined'] as const),
+      })
+    ),
   })
 
   public static messages = {

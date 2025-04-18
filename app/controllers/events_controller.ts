@@ -69,7 +69,7 @@ export default class EventsController {
       kindergardenId: auth.user!.kindergardenId,
     })
 
-    const attendeeIds = data.attendees.map((attendee) => attendee.id)
+    const attendeeIds = (data.attendees ?? []).map((attendee) => attendee.id)
 
     if (!attendeeIds.includes(auth.user!.id)) {
       attendeeIds.push(auth.user!.id)
@@ -166,7 +166,12 @@ export default class EventsController {
       messages: EventValidator.messages,
     })
 
-    const event = await Event.query().where('id', params.id).first()
+    const event = await Event.query()
+      .where('id', params.id)
+      .preload('attendees', (query) => {
+        query.pivotColumns(['invitation_status'])
+      })
+      .first()
 
     if (!event)
       return response.status(404).json({ error: `Event with ID:${params.id} does not exists` })
@@ -177,7 +182,42 @@ export default class EventsController {
     if (auth.user!.role === Role.MANAGER && event.kindergardenId !== auth.user!.kindergardenId)
       return response.status(403).json({ error: 'You are not the manager of this kindergarden' })
 
+    const attendeeIds = (data.attendees ?? []).map((attendee) => attendee.id)
+
+    // Ensure author is included
+    if (!attendeeIds.includes(auth.user!.id)) {
+      attendeeIds.push(auth.user!.id)
+    }
+
+    console.log('TU SAM: ', event.attendees[0].$extras)
+
+    // Map current statuses by attendee ID
+    const currentStatuses = new Map(
+      event.attendees.map((att) => [att.id, att.$extras.pivot_invitation_status])
+    )
+
+    const attachPayload = attendeeIds.reduce(
+      (acc: { [key: number]: { invitation_status: string } }, id) => {
+        // If attendee already exists, keep their current status
+        if (currentStatuses.has(id)) {
+          acc[id] = { invitation_status: currentStatuses.get(id)! }
+        } else {
+          // Otherwise, set new status: owner = ACCEPTED, others = PENDING
+          acc[id] = {
+            invitation_status:
+              id === auth.user!.id ? InvitationStatus.ACCEPTED : InvitationStatus.PENDING,
+          }
+        }
+        return acc
+      },
+      {}
+    )
+
+    // Sync attendees (detach missing ones and attach/update existing)
+    await event.related('attendees').sync(attachPayload)
+
     await event.merge(data).save()
+
     return response.status(200).json({ message: 'Event updated successfully', event })
   }
 
