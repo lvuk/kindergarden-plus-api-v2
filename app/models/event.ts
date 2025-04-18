@@ -34,6 +34,7 @@ export default class Event extends BaseModel {
   @manyToMany(() => User, {
     pivotTable: 'event_attendees',
     pivotRelatedForeignKey: 'attendee_id',
+    pivotForeignKey: 'event_id',
   })
   declare attendees: ManyToMany<typeof User>
 

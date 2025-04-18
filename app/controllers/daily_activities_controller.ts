@@ -3,13 +3,13 @@ import DailyActivityValidator from '#validators/DailyActivityValidator'
 import type { HttpContext } from '@adonisjs/core/http'
 import { Role } from '../enums/role.js'
 import User from '#models/user'
+import { DateTime } from 'luxon'
 
 export default class DailyActivitiesController {
   //show all daily activities
   async index({ request, response, auth }: HttpContext) {
-    // const page = request.param('page', 1)
-    // const limit = 10
-    var dailyActivities = []
+    const date = request.input('date') // expected format: 'yyyy-MM-dd'
+    let dailyActivitiesQuery = DailyActivity.query().preload('author')
 
     if (auth.user!.role === Role.PARENT) {
       const parent = await User.query()
@@ -21,21 +21,21 @@ export default class DailyActivitiesController {
 
       const groupIds = parent.children.map((child) => child.groupId)
 
-      // dailyActivities = await DailyActivity.query().preload('author').paginate(page, limit)
-      dailyActivities = await DailyActivity.query().preload('author')
-
-      dailyActivities.filter((dailyActivity) => groupIds.includes(dailyActivity.author.groupId))
+      dailyActivitiesQuery.whereHas('author', (authorQuery) => {
+        authorQuery.whereIn('group_id', groupIds)
+      })
     } else if (auth.user!.role === Role.TEACHER) {
-      dailyActivities = await DailyActivity.query()
-        .where('author_id', auth.user!.id)
-        .preload('author')
-      // .paginate(page, limit)
-    } else {
-      // dailyActivities = await DailyActivity.query().preload('author').paginate(page, limit)
-      dailyActivities = await DailyActivity.query().preload('author')
+      dailyActivitiesQuery.where('author_id', auth.user!.id)
     }
 
-    console.log(dailyActivities)
+    if (date) {
+      const parsedDate = DateTime.fromFormat(date, 'yyyy-MM-dd')
+      if (parsedDate.isValid) {
+        dailyActivitiesQuery.whereRaw('DATE(date) = ?', [parsedDate.toFormat('yyyy-MM-dd')])
+      }
+    }
+
+    const dailyActivities = await dailyActivitiesQuery.orderBy('date', 'desc')
 
     return response.status(200).json(dailyActivities)
   }

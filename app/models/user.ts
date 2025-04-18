@@ -93,6 +93,8 @@ export default class User extends compose(BaseModel, AuthFinder) {
 
   @manyToMany(() => Event, {
     pivotTable: 'event_attendees',
+    pivotRelatedForeignKey: 'event_id',
+    pivotForeignKey: 'attendee_id',
   })
   public events!: ManyToMany<typeof Event>
 

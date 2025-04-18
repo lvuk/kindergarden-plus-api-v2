@@ -23,6 +23,12 @@ export default class EventValidator {
     ),
   })
 
+  public static respondToInvitationSchema = schema.create({
+    // eventId: schema.number([rules.required()]),
+    // userId: schema.number([rules.required()]),
+    invitationStatus: schema.enum(['accepted', 'declined'] as const, [rules.required()]),
+  })
+
   public static updateSchema = schema.create({
     // authorId: schema.number.optional([rules.unsigned()]),
     kindergardenId: schema.number.optional([rules.unsigned()]),

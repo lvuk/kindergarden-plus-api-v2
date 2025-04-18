@@ -184,6 +184,9 @@ router
       .group(() => {
         router.get('/', [EventsController, 'index']).as('api.events.index') //svi
         router.get('/:id', [EventsController, 'show']).as('api.events.show') //svi
+        router
+          .put('/:id/respond', [EventsController, 'respondToInvitation'])
+          .as('api.events.respond') //svi
 
         router
           .group(() => {

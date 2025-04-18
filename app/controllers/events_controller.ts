@@ -169,6 +169,32 @@ export default class EventsController {
     return response.status(200).json({ message: 'Event updated successfully', event })
   }
 
+  async respondToInvitation({ params, request, response, auth }: HttpContext) {
+    const data = await request.validate({
+      schema: EventValidator.respondToInvitationSchema,
+      messages: EventValidator.messages,
+    })
+
+    const event = await Event.query().where('id', params.id).preload('attendees').first()
+    if (!event) return response.status(404).json({ errors: [{ message: 'Event not found' }] })
+
+    const attendee = event.attendees.find((att) => att.id === auth.user!.id)
+    if (!attendee)
+      return response
+        .status(404)
+        .json({ errors: [{ message: 'You are not invited to this event' }] })
+
+    attendee.$extras.pivot_invitation_status = data.invitationStatus
+
+    await attendee.related('events').pivotQuery().where('event_id', event.id).update({
+      invitation_status: data.invitationStatus,
+    })
+
+    return response.status(200).json({
+      message: 'Invitation status updated successfully',
+    })
+  }
+
   //delete event
   async destroy({ params, response, auth }: HttpContext) {
     const event = await Event.query().where('id', params.id).first()
