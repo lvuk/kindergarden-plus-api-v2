@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 import { DateTime } from 'luxon'
 import { BaseModel, belongsTo, column } from '@adonisjs/lucid/orm'
-import User from './user.js'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import Kindergarden from './kindergarden.js'
+import Child from './child.js'
 
 export default class Payment extends BaseModel {
   @column({ isPrimary: true })
@@ -13,7 +13,7 @@ export default class Payment extends BaseModel {
   declare kindergardenId: number
 
   @column()
-  declare userId: number
+  declare childId: number
 
   @column({
     serialize: (value: any) => Number(value),
@@ -38,8 +38,8 @@ export default class Payment extends BaseModel {
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 
-  @belongsTo(() => User)
-  public payee!: BelongsTo<typeof User>
+  @belongsTo(() => Child)
+  public payee!: BelongsTo<typeof Child>
 
   @belongsTo(() => Kindergarden)
   public kindergarden!: BelongsTo<typeof Kindergarden>

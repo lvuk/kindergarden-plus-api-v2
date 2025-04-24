@@ -4,6 +4,8 @@ import ChildValidator from '#validators/ChildValidator'
 import type { HttpContext } from '@adonisjs/core/http'
 import { Role } from '../enums/role.js'
 import Child from '#models/child'
+import Payment from '#models/payment'
+import { DateTime } from 'luxon'
 
 export default class ChildrenController {
   //list all children
@@ -54,12 +56,28 @@ export default class ChildrenController {
       imageUrl: data.imageUrl,
       birthDate: data.birthDate,
       groupId: data.groupId,
+      healthRecord: data.healthRecord,
     })
 
     await child.related('parents').attach(data.parents)
 
-    child.load('parents')
-    child.load('group')
+    await child.load('parents')
+    await child.load('group', (query) => {
+      query.preload('kindergarden')
+    })
+
+    const currentMonth = DateTime.fromJSDate(DateTime.now().toJSDate())
+    const nextMonth = currentMonth.plus({ months: 1 })
+
+    await Payment.create({
+      kindergardenId: child.group.kindergarden.id,
+      childId: child.id,
+      amount: child.group.kindergarden.paymentAmount,
+      paymentDate: null,
+      monthPaidFor: nextMonth,
+      isPaid: false,
+      description: 'Initial payment',
+    })
 
     return response.status(201).json(child)
   }

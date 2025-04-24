@@ -24,6 +24,7 @@ export default class ChildValidator {
     birthDate: schema.date({
       format: 'dd.MM.yyyy',
     }),
+    healthRecord: schema.string.optional({ trim: true }, [rules.maxLength(255)]),
     parents: schema
       .array([rules.minLength(1), rules.maxLength(2)])
       .members(schema.number([rules.unsigned(), rules.required()])),
@@ -38,6 +39,7 @@ export default class ChildValidator {
     birthDate: schema.date.optional({
       format: 'dd.MM.yyyy',
     }),
+    healthRecord: schema.string.optional({ trim: true }, [rules.maxLength(255)]),
     parents: schema.array
       .optional([rules.minLength(1), rules.maxLength(2)])
       .members(schema.number([rules.unsigned(), rules.required()])),

@@ -5,6 +5,9 @@ import RegisterValidator from '#validators/RegisterValidator'
 import UpdateUserValidator from '#validators/UpdateUserValidator'
 import type { HttpContext } from '@adonisjs/core/http'
 import { Role } from '../enums/role.js'
+import Payment from '#models/payment'
+import { DateTime } from 'luxon'
+import { forEachChild } from 'typescript'
 
 export default class UsersController {
   //List all users

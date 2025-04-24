@@ -1,10 +1,11 @@
 /* eslint-disable @typescript-eslint/explicit-member-accessibility */
 import { DateTime } from 'luxon'
-import { BaseModel, belongsTo, column, manyToMany } from '@adonisjs/lucid/orm'
+import { BaseModel, belongsTo, column, hasMany, manyToMany } from '@adonisjs/lucid/orm'
 import User from './user.js'
-import type { BelongsTo, ManyToMany } from '@adonisjs/lucid/types/relations'
+import type { BelongsTo, HasMany, ManyToMany } from '@adonisjs/lucid/types/relations'
 import Group from './group.js'
 import Attendance from './attendance.js'
+import Payment from './payment.js'
 
 export default class Child extends BaseModel {
   @column({ isPrimary: true })
@@ -54,5 +55,8 @@ export default class Child extends BaseModel {
     pivotColumns: ['is_present', 'category'],
   })
   declare attendances: ManyToMany<typeof Attendance>
+
+  @hasMany(() => Payment)
+  declare payments: HasMany<typeof Payment>
 }
 // notes Notes[]

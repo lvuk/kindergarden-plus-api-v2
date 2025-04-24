@@ -3,12 +3,17 @@ import type { HttpContext } from '@adonisjs/core/http'
 import { Role } from '../enums/role.js'
 import PaymentValidator from '#validators/PaymentsValidator'
 import { DateTime } from 'luxon'
+import User from '#models/user'
 
 export default class PaymentsController {
   async index({ auth, response, request }: HttpContext) {
     const date = request.input('date')
 
-    const paymentsQuery = Payment.query().preload('payee').preload('kindergarden')
+    const paymentsQuery = Payment.query()
+      .preload('payee', (query) => {
+        query.preload('parents')
+      })
+      .preload('kindergarden')
 
     switch (auth.user!.role) {
       case Role.ADMIN:
@@ -17,7 +22,9 @@ export default class PaymentsController {
         paymentsQuery.where('kindergardenId', auth.user!.kindergardenId)
         break
       case Role.PARENT:
-        paymentsQuery.where('userId', auth.user!.id)
+        const parent = await User.query().where('id', auth.user!.id).preload('children').first()
+        const childIds = parent!.children.map((child) => child.id)
+        paymentsQuery.whereIn('child_id', childIds)
         break
     }
 
@@ -39,9 +46,11 @@ export default class PaymentsController {
 
     if (!data) return response.status(400).json({ errors: [{ message: 'Invalid data' }] })
 
+    const parent = await User.query().where('id', auth.user!.id).first()
+
     const payment = await Payment.create({
       kindergardenId: auth.user!.kindergardenId,
-      userId: auth.user!.id,
+      childId: parent?.children[0].id,
       amount: data.amount,
       paymentDate: data.paymentDate,
       monthPaidFor: data.monthPaidFor,
@@ -63,8 +72,13 @@ export default class PaymentsController {
       return response.status(404).json({ errors: [{ message: 'Payment not found' }] })
     }
 
-    if (auth.user!.role === Role.PARENT && payment.userId !== auth.user!.id) {
-      return response.status(403).json({ errors: [{ message: 'Forbidden' }] })
+    if (auth.user!.role === Role.PARENT) {
+      const parent = await User.query().where('id', auth.user!.id).preload('children').firstOrFail()
+
+      const hasAccess = parent.children.some((child) => child.id === payment.childId)
+      if (!hasAccess) {
+        return response.status(403).json({ errors: [{ message: 'Forbidden' }] })
+      }
     }
 
     if (auth.user!.role === Role.MANAGER && payment.kindergardenId !== auth.user!.kindergardenId) {
@@ -102,7 +116,14 @@ export default class PaymentsController {
   async pay({ params, auth, response }: HttpContext) {
     const payment = await Payment.findOrFail(params.id)
 
-    if (payment.userId !== auth.user!.id) {
+    // 1. Ensure the parent has access to the child
+    const parent = await User.query()
+      .where('id', auth.user!.id)
+      .preload('children') // assumes a many-to-many 'children' relation
+      .firstOrFail()
+
+    const hasAccess = parent.children.some((child) => child.id === payment.childId)
+    if (!hasAccess) {
       return response.unauthorized({ errors: [{ message: 'Unauthorized' }] })
     }
 
@@ -110,33 +131,33 @@ export default class PaymentsController {
       return response.badRequest({ errors: [{ message: 'Already paid' }] })
     }
 
-    // 1. Mark current payment as paid
+    // 2. Mark current payment as paid
     payment.isPaid = true
     payment.paymentDate = DateTime.now().toJSDate()
     await payment.save()
 
-    // 2. Check if all earlier payments are paid
+    // 3. Check if all earlier payments for the same child are paid
     const unpaidOlder = await Payment.query()
-      .where('user_id', auth.user!.id)
+      .where('child_id', payment.childId)
       .andWhere('is_paid', false)
       .andWhere('month_paid_for', '<', DateTime.fromJSDate(payment.monthPaidFor))
 
     if (unpaidOlder.length === 0) {
-      // 3. No older unpaid payments — create the next one
+      // 4. Create the next month's payment
       const currentMonth = DateTime.fromJSDate(payment.monthPaidFor)
       const nextMonth = currentMonth.plus({ months: 1 })
 
       const existing = await Payment.query()
-        .where('user_id', auth.user!.id)
-        .andWhere('month_paid_for', nextMonth.toISODate()!) // still works
+        .where('child_id', payment.childId)
+        .andWhere('month_paid_for', nextMonth.toISODate()!)
         .first()
 
       if (!existing) {
         await Payment.create({
-          kindergardenId: auth.user!.kindergardenId,
-          userId: auth.user!.id,
+          kindergardenId: payment.kindergardenId,
+          childId: payment.childId,
           amount: payment.amount,
-          paymentDate: null, // unpaid, so no date yet
+          paymentDate: null, // unpaid
           monthPaidFor: nextMonth,
           isPaid: false,
           description: `Payment for ${nextMonth.toFormat('MM/yyyy')}`,

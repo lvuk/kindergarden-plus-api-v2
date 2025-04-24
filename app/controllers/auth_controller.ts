@@ -112,6 +112,8 @@ export default class AuthController {
     await user.load('group', (query) => {
       query.preload('kindergarden')
     })
+    // await user.load('kindergarden')
+    // await user.load('children')
     // const { id, role } = user!
     // response.cookie('user', { id, role }, { httpOnly: false, maxAge: 100 * 60 })
 

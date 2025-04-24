@@ -134,9 +134,6 @@ export default class User extends compose(BaseModel, AuthFinder) {
   @hasMany(() => DailyActivity)
   declare dailyActivities: HasMany<typeof DailyActivity>
 
-  @hasMany(() => Payment)
-  declare payments: HasMany<typeof Payment>
-
   static accessTokens = DbAccessTokensProvider.forModel(User)
 }
 

@@ -221,6 +221,7 @@ export default class EventsController {
     return response.status(200).json({ message: 'Event updated successfully', event })
   }
 
+  //respond to invitation
   async respondToInvitation({ params, request, response, auth }: HttpContext) {
     const data = await request.validate({
       schema: EventValidator.respondToInvitationSchema,
